@@ -20,6 +20,15 @@ Options:
 - `-p, --page <number>`: Page number
 - `-s, --size <number>`: Page size
 
+### `customer group`
+
+Commands for managing customer groups.
+
+```bash
+# List all customer groups
+mage-remote-run customer group list --page 1 --size 20
+```
+
 ## customer search `<query>`
 
 Search customers by email (LIKE match).
