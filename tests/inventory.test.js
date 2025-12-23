@@ -95,7 +95,7 @@ describe('Inventory Commands', () => {
 
         await program.parseAsync(['node', 'test', 'inventory', 'source', 'list']);
 
-        expect(mockClient.get).toHaveBeenCalledWith('V1/inventory/sources', expect.anything());
+        expect(mockClient.get).toHaveBeenCalledWith('V1/inventory/sources', expect.anything(), expect.any(Object));
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
     });
 

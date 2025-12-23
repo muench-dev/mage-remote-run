@@ -32,7 +32,6 @@ jest.unstable_mockModule('html-to-text', () => ({
 
 const factoryMod = await import('../lib/api/factory.js');
 const { registerProductsCommands } = await import('../lib/commands/products.js');
-const inquirer = await import('inquirer');
 
 describe('Product Commands', () => {
     let program;
@@ -71,7 +70,7 @@ describe('Product Commands', () => {
         };
 
         expect(factoryMod.createClient).toHaveBeenCalled();
-        expect(mockClient.get).toHaveBeenCalledWith('V1/products', expectedParams);
+        expect(mockClient.get).toHaveBeenCalledWith('V1/products', expectedParams, expect.any(Object));
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
     });
 
@@ -95,7 +94,7 @@ describe('Product Commands', () => {
 
         await program.parseAsync(['node', 'test', 'product', 'show', 'TS123']);
 
-        expect(mockClient.get).toHaveBeenCalledWith('V1/products/TS123', expect.anything(), expect.anything());
+        expect(mockClient.get).toHaveBeenCalledWith('V1/products/TS123', expect.anything(), expect.any(Object));
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Product Information'));
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Test Description')); // html-to-text should remove tags
     });

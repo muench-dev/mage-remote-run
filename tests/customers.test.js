@@ -69,7 +69,7 @@ describe('Customers Commands', () => {
         await program.parseAsync(['node', 'test', 'customer', 'list']);
 
         expect(factoryMod.createClient).toHaveBeenCalled();
-        expect(mockClient.get).toHaveBeenCalledWith('V1/customers/search', expect.anything());
+        expect(mockClient.get).toHaveBeenCalledWith('V1/customers/search', expect.anything(), expect.any(Object));
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
     });
 
@@ -92,7 +92,7 @@ describe('Customers Commands', () => {
 
         await program.parseAsync(['node', 'test', 'customer', 'show', '1']);
 
-        expect(mockClient.get).toHaveBeenCalledWith('V1/customers/1', expect.anything(), expect.anything());
+        expect(mockClient.get).toHaveBeenCalledWith('V1/customers/1', expect.anything(), expect.any(Object));
         // Chalk mock returns plain string now, so we assume "Customer Information" is printed AS IS or at least containing it.
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Customer Information'));
     });
