@@ -1,0 +1,43 @@
+{
+  "name": "mage-remote-run",
+  "version": "0.1.0",
+  "description": "The remote swiss army knife for Magento Open Source, Mage-OS, Adobe Commerce",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "start": "node bin/mage-remote-run.js",
+    "release": "release-it"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Christian Münch",
+    "email": "christian@muench.dev",
+    "url": "https://muench.dev"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "mage-remote-run": "./bin/mage-remote-run.js"
+  },
+  "files": [
+    "bin/*",
+    "lib/*",
+    "**/api-specs/*",
+    "!**/*.test.js"
+  ],
+  "dependencies": {
+    "@inquirer/prompts": "^8.1.0",
+    "axios": "^1.13.2",
+    "chalk": "^5.6.2",
+    "cli-table3": "^0.6.5",
+    "commander": "^14.0.2",
+    "env-paths": "^3.0.0",
+    "inquirer": "^13.1.0",
+    "mkdirp": "^3.0.1",
+    "oauth-1.0a": "^2.2.6",
+    "openapi-client-axios": "^7.8.0"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0"
+  }
+}

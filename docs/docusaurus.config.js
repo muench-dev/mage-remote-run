@@ -1,0 +1,96 @@
+// @ts-check
+// Note: type annotations allow type checking and IDEs autocompletion
+
+import { themes as prismThemes } from 'prism-react-renderer'
+import { configDotenv } from 'dotenv'
+
+configDotenv()
+
+// Node 25 exposes a throwing localStorage getter unless a storage file path is provided.
+// Remove it to keep SSR evaluation from failing during the static build.
+const localStorageDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+if (localStorageDescriptor) {
+  delete globalThis.localStorage
+}
+
+/** @type {import('@docusaurus/types').Config} */
+const navbarItems = [
+  {
+    type: 'doc',
+    position: 'left',
+    docId: 'intro',
+    label: 'Docs'
+  },
+  {
+    type: 'doc',
+    position: 'left',
+    docId: 'command-docs/index',
+    label: 'Commands'
+  },
+  {
+    label: 'GitHub',
+    href: 'https://github.com/muench-dev/mage-remote-run'
+  },
+  {
+    label: 'muench.dev',
+    href: 'https://muench.dev'
+  }
+]
+
+const config = {
+  title: 'mage-remote-run',
+  tagline: 'Remote Magento CLI',
+  url: 'https://muench-dev.github.io',
+  baseUrl: '/mage-remote-run/',
+  onBrokenLinks: 'throw',
+  onBrokenMarkdownLinks: 'warn',
+  favicon: 'img/favicon.ico',
+  organizationName: 'muench-dev',
+  projectName: 'mage-remote-run',
+  future: {
+    experimental_faster: true,
+    v4: true
+  },
+  markdown: {
+    mermaid: true
+  },
+  customFields: {},
+  themes: ['@docusaurus/theme-mermaid'],
+  themeConfig: {
+    navbar: {
+      logo: {
+        alt: 'mage-remote-run Logo',
+        src: 'img/logo.svg',
+        height: 64
+      },
+      items: navbarItems
+    },
+    mermaid: {
+      theme: { light: 'neutral', dark: 'forest' }
+    },
+    prism: {
+      theme: prismThemes.github,
+      darkTheme: prismThemes.vsDark,
+      additionalLanguages: ['php', 'bash', 'sql']
+    }
+  },
+  presets: [
+    [
+      'classic',
+      /** @type {import('@docusaurus/preset-classic').Options} */ ({
+        docs: {
+          path: 'docs',
+          routeBasePath: '/',
+          sidebarPath: require.resolve('./sidebars.js'),
+          editUrl:
+            'https://github.com/muench-dev/mage-remote-run/edit/main/docs/'
+        },
+        theme: {
+          customCss: require.resolve('./src/css/custom.css')
+        }
+      })
+    ]
+  ]
+}
+
+module.exports = config
