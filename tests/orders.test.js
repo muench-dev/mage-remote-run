@@ -81,7 +81,7 @@ describe('Order Commands', () => {
 
         await program.parseAsync(['node', 'test', 'order', 'show', '1']);
 
-        expect(mockClient.get).toHaveBeenCalledWith('orders/1', expect.anything(), expect.anything());
+        expect(mockClient.get).toHaveBeenCalledWith('V1/orders/1', expect.anything(), expect.anything());
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Order Information'));
     });
 });

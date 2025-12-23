@@ -69,7 +69,7 @@ describe('Customers Commands', () => {
         await program.parseAsync(['node', 'test', 'customer', 'list']);
 
         expect(factoryMod.createClient).toHaveBeenCalled();
-        expect(mockClient.get).toHaveBeenCalledWith('customers/search', expect.anything());
+        expect(mockClient.get).toHaveBeenCalledWith('V1/customers/search', expect.anything());
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
     });
 
@@ -80,7 +80,7 @@ describe('Customers Commands', () => {
 
         await program.parseAsync(['node', 'test', 'customer', 'search', 'test@example.com']);
 
-        expect(mockClient.get).toHaveBeenCalledWith('customers/search', expect.anything());
+        expect(mockClient.get).toHaveBeenCalledWith('V1/customers/search', expect.anything());
     });
 
     it('show: should show customer details', async () => {
@@ -92,7 +92,7 @@ describe('Customers Commands', () => {
 
         await program.parseAsync(['node', 'test', 'customer', 'show', '1']);
 
-        expect(mockClient.get).toHaveBeenCalledWith('customers/1', expect.anything(), expect.anything());
+        expect(mockClient.get).toHaveBeenCalledWith('V1/customers/1', expect.anything(), expect.anything());
         // Chalk mock returns plain string now, so we assume "Customer Information" is printed AS IS or at least containing it.
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Customer Information'));
     });
@@ -103,7 +103,7 @@ describe('Customers Commands', () => {
 
         await program.parseAsync(['node', 'test', 'customer', 'delete', '1']);
 
-        expect(mockClient.delete).toHaveBeenCalledWith('customers/1');
+        expect(mockClient.delete).toHaveBeenCalledWith('V1/customers/1');
     });
 
     it('confirm: should resend confirmation', async () => {
@@ -112,6 +112,6 @@ describe('Customers Commands', () => {
 
         await program.parseAsync(['node', 'test', 'customer', 'confirm', '1']);
 
-        expect(mockClient.post).toHaveBeenCalledWith('customers/confirm', expect.anything());
+        expect(mockClient.post).toHaveBeenCalledWith('V1/customers/confirm', expect.anything());
     });
 });

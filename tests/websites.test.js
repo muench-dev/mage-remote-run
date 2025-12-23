@@ -68,7 +68,7 @@ describe('Websites Commands', () => {
         await program.parseAsync(['node', 'test', 'website', 'list']);
 
         expect(factoryMod.createClient).toHaveBeenCalled();
-        expect(mockClient.get).toHaveBeenCalledWith('store/websites');
+        expect(mockClient.get).toHaveBeenCalledWith('V1/store/websites');
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
     });
 
@@ -79,7 +79,7 @@ describe('Websites Commands', () => {
 
         await program.parseAsync(['node', 'test', 'website', 'search', 'Main']);
 
-        expect(mockClient.get).toHaveBeenCalledWith('store/websites');
+        expect(mockClient.get).toHaveBeenCalledWith('V1/store/websites');
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
     });
 
@@ -90,6 +90,6 @@ describe('Websites Commands', () => {
 
         await program.parseAsync(['node', 'test', 'website', 'delete', '1']);
 
-        expect(mockClient.delete).toHaveBeenCalledWith('store/websites/1');
+        expect(mockClient.delete).toHaveBeenCalledWith('V1/store/websites/1');
     });
 });

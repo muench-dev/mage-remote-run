@@ -126,7 +126,7 @@ describe('Connection Commands', () => {
             await program.parseAsync(['node', 'test', 'connection', 'test']);
 
             expect(factoryMod.createClient).toHaveBeenCalled();
-            expect(mockClient.get).toHaveBeenCalledWith('store/storeViews');
+            expect(mockClient.get).toHaveBeenCalledWith('V1/store/storeViews');
             expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Connection successful'));
         });
 

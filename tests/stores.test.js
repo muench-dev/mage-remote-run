@@ -62,14 +62,14 @@ describe('Stores Commands', () => {
 
         await program.parseAsync(['node', 'test', 'store', 'list']);
 
-        expect(mockClient.get).toHaveBeenCalledWith('store/storeGroups');
+        expect(mockClient.get).toHaveBeenCalledWith('V1/store/storeGroups');
     });
 
     it('view list: should list store views', async () => {
         mockClient.get.mockResolvedValue([{ id: 1, name: 'Default', code: 'default' }]);
         // Command nesting: store view list
         await program.parseAsync(['node', 'test', 'store', 'view', 'list']);
-        expect(mockClient.get).toHaveBeenCalledWith('store/storeViews');
+        expect(mockClient.get).toHaveBeenCalledWith('V1/store/storeViews');
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
     });
 
@@ -80,6 +80,6 @@ describe('Stores Commands', () => {
 
         await program.parseAsync(['node', 'test', 'store', 'delete', '5']);
 
-        expect(mockClient.delete).toHaveBeenCalledWith('store/storeGroups/5');
+        expect(mockClient.delete).toHaveBeenCalledWith('V1/store/storeGroups/5');
     });
 });
