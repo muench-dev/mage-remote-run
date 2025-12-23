@@ -1,6 +1,6 @@
 {
   "name": "mage-remote-run",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "The remote swiss army knife for Magento Open Source, Mage-OS, Adobe Commerce",
   "main": "index.js",
   "scripts": {
