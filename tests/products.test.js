@@ -49,6 +49,26 @@ describe('Product Commands', () => {
         jest.restoreAllMocks();
     });
 
+    it('list: should list products with sorting', async () => {
+        mockClient.get.mockResolvedValue({
+            items: [{ id: 1, sku: 'TS123', name: 'Test Shirt', type_id: 'simple', price: 10 }],
+            total_count: 1
+        });
+
+        await program.parseAsync(['node', 'test', 'product', 'list', '--sort-by', 'price', '--sort-order', 'DESC']);
+
+        const expectedParams = {
+            'searchCriteria[currentPage]': '1',
+            'searchCriteria[pageSize]': '20',
+            'searchCriteria[sortOrders][0][field]': 'price',
+            'searchCriteria[sortOrders][0][direction]': 'DESC'
+        };
+
+        expect(factoryMod.createClient).toHaveBeenCalled();
+        expect(mockClient.get).toHaveBeenCalledWith('V1/products', expectedParams);
+        expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+    });
+
     it('attribute list: should list attributes', async () => {
         mockClient.get.mockResolvedValue({
             items: [{ attribute_code: 'name', default_frontend_label: 'Name', is_required: true, is_user_defined: false }]
@@ -57,6 +77,21 @@ describe('Product Commands', () => {
         await program.parseAsync(['node', 'test', 'product', 'attribute', 'list']);
 
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+    });
+
+    it('show: should show product details', async () => {
+        mockClient.get.mockResolvedValue({
+            id: 1, sku: 'TS123', name: 'Test Shirt', type_id: 'simple', price: 10,
+            created_at: '2023-01-01', updated_at: '2023-01-01',
+            extension_attributes: { stock_item: { is_in_stock: true, qty: 100 } },
+            custom_attributes: [{ attribute_code: 'description', value: '<p>Test <strong>Description</strong></p>' }]
+        });
+
+        await program.parseAsync(['node', 'test', 'product', 'show', 'TS123']);
+
+        expect(mockClient.get).toHaveBeenCalledWith('V1/products/TS123', expect.anything(), expect.anything());
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Product Information'));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Test Description')); // html-to-text should remove tags
     });
 
     it('types: should list product types', async () => {

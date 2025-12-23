@@ -25,6 +25,7 @@ import { registerOrdersCommands } from '../lib/commands/orders.js';
 import { registerEavCommands } from '../lib/commands/eav.js';
 import { registerProductsCommands } from '../lib/commands/products.js';
 import { registerTaxCommands } from '../lib/commands/tax.js';
+import { registerInventoryCommands } from '../lib/commands/inventory.js';
 
 registerConnectionCommands(program);
 registerWebsitesCommands(program);
@@ -34,6 +35,7 @@ registerOrdersCommands(program);
 registerEavCommands(program);
 registerProductsCommands(program);
 registerTaxCommands(program);
+registerInventoryCommands(program);
 
 function resolveCommandMatch(parent, token) {
     const tokenLower = token.toLowerCase();

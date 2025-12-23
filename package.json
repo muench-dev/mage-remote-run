@@ -36,6 +36,7 @@
     "cli-table3": "^0.6.5",
     "commander": "^14.0.2",
     "env-paths": "^3.0.0",
+    "html-to-text": "^9.0.5",
     "inquirer": "^13.1.0",
     "mkdirp": "^3.0.1",
     "oauth-1.0a": "^2.2.6",

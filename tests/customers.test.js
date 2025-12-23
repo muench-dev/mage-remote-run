@@ -114,4 +114,15 @@ describe('Customers Commands', () => {
 
         expect(mockClient.post).toHaveBeenCalledWith('V1/customers/confirm', expect.anything());
     });
+    it('group list: should list customer groups', async () => {
+        mockClient.get.mockResolvedValue({
+            items: [{ id: 1, code: 'General', tax_class_id: 3 }],
+            total_count: 1
+        });
+
+        await program.parseAsync(['node', 'test', 'customer', 'group', 'list']);
+
+        expect(mockClient.get).toHaveBeenCalledWith('V1/customerGroups/search', expect.anything());
+        expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+    });
 });
