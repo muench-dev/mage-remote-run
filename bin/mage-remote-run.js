@@ -89,70 +89,7 @@ program.hook('preAction', async (thisCommand, actionCommand) => {
     }
 });
 
-function resolveCommandMatch(parent, token) {
-    const tokenLower = token.toLowerCase();
-
-    // Check for exact match first
-    const exactMatch = parent.commands.find((cmd) => {
-        return cmd.name().toLowerCase() === tokenLower;
-    });
-
-    if (exactMatch) {
-        return {
-            match: exactMatch,
-            matches: [exactMatch]
-        };
-    }
-
-    const matches = parent.commands.filter((cmd) => {
-        const name = cmd.name().toLowerCase();
-        if (name.startsWith(tokenLower)) return true;
-        const aliases = cmd.aliases ? cmd.aliases() : [];
-        return aliases.some((alias) => alias.toLowerCase().startsWith(tokenLower));
-    });
-
-    return {
-        match: matches.length === 1 ? matches[0] : null,
-        matches
-    };
-}
-
-function expandCommandAbbreviations(rootCommand, argv) {
-    const expanded = [];
-    let current = rootCommand;
-    const path = [];
-
-    for (let i = 0; i < argv.length; i += 1) {
-        const token = argv[i];
-        if (token.startsWith('-')) {
-            expanded.push(token);
-            continue;
-        }
-
-        if (!current.commands || current.commands.length === 0) {
-            expanded.push(...argv.slice(i));
-            break;
-        }
-
-        const { match, matches } = resolveCommandMatch(current, token);
-        if (!match) {
-            if (matches.length > 1) {
-                const parentName = path.length > 0 ? path.join(' ') : current.name();
-                const options = matches.map((cmd) => cmd.name()).join(', ');
-                console.error(`Ambiguous command "${token}" under "${parentName}". Options: ${options}.`);
-                process.exit(1);
-            }
-            expanded.push(token);
-            continue;
-        }
-
-        expanded.push(match.name());
-        current = match;
-        path.push(match.name());
-    }
-
-    return expanded;
-}
+import { expandCommandAbbreviations } from '../lib/command-helper.js';
 
 // Check for first run (no profiles configured and no arguments or just help)
 // We need to check args length.
@@ -177,7 +114,15 @@ if (!hasProfiles && args.length === 0) {
     args = ['connection', 'add'];
 }
 
-args = expandCommandAbbreviations(program, args);
+try {
+    args = expandCommandAbbreviations(program, args);
+} catch (e) {
+    if (e.isAmbiguous) {
+        console.error(e.message);
+        process.exit(1);
+    }
+    throw e;
+}
 process.argv = [...process.argv.slice(0, 2), ...args];
 
 program.parse(process.argv);
