@@ -68,7 +68,7 @@ describe('Websites Commands', () => {
         await program.parseAsync(['node', 'test', 'website', 'list']);
 
         expect(factoryMod.createClient).toHaveBeenCalled();
-        expect(mockClient.get).toHaveBeenCalledWith('V1/store/websites');
+        expect(mockClient.get).toHaveBeenCalledWith('V1/store/websites', {}, expect.any(Object));
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
     });
 

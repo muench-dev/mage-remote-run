@@ -28,6 +28,7 @@ import { registerCompanyCommands } from '../lib/commands/company.js';
 import { registerTaxCommands } from '../lib/commands/tax.js';
 import { registerInventoryCommands } from '../lib/commands/inventory.js';
 import { registerAdobeIoEventsCommands } from '../lib/commands/adobe-io-events.js';
+import { registerWebhooksCommands } from '../lib/commands/webhooks.js';
 import { getActiveProfile } from '../lib/config.js';
 
 registerConnectionCommands(program);
@@ -47,6 +48,7 @@ if (profile) {
     if (profile.type === 'ac-cloud-paas' || profile.type === 'ac-saas') {
         registerAdobeIoEventsCommands(program);
         registerCompanyCommands(program);
+        registerWebhooksCommands(program);
     }
 }
 
