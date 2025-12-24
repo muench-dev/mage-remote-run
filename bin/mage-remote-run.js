@@ -13,7 +13,21 @@ const program = new Command();
 program
     .name('mage-remote-run')
     .description('The remote swiss army knife for Magento Open Source, Mage-OS, Adobe Commerce')
-    .version(pkg.version);
+    .version(pkg.version)
+    .configureHelp({
+        visibleCommands: (cmd) => {
+            const commands = cmd.commands.filter(c => !c._hidden);
+            return commands.sort((a, b) => {
+                if (a.name() === 'connection') return -1;
+                if (b.name() === 'connection') return 1;
+                return a.name().localeCompare(b.name());
+            });
+        },
+        subcommandTerm: (cmd) => chalk.cyan(cmd.name()),
+        subcommandDescription: (cmd) => chalk.gray(cmd.description()),
+        optionTerm: (option) => chalk.yellow(option.flags),
+        optionDescription: (option) => chalk.gray(option.description)
+    });
 
 
 
