@@ -85,7 +85,13 @@ describe('Connection Commands', () => {
                 profiles: { 'Existing': {}, 'MyProfile': {} }, // Simulate multiple profiles to trigger "set active" prompt
                 activeProfile: 'Existing'
             });
-            inquirerPrompts.confirm.mockResolvedValue(true); // Set as active
+
+            // Mock confirm for the sequence:
+            // 1. "Test connection?" -> false (Skip test to exit loop)
+            // 2. "Set this as the active profile?" -> true
+            inquirerPrompts.confirm
+                .mockResolvedValueOnce(false) // Skip test loop
+                .mockResolvedValueOnce(true); // Set as active
 
             // Execute
             await program.parseAsync(['node', 'test', 'connection', 'add']);
@@ -93,6 +99,7 @@ describe('Connection Commands', () => {
             // Verify
             expect(inquirerPrompts.input).toHaveBeenCalled();
             expect(promptsMod.askForProfileSettings).toHaveBeenCalled();
+            expect(inquirerPrompts.confirm).toHaveBeenCalledWith(expect.objectContaining({ message: 'Test connection?' }));
             expect(configMod.addProfile).toHaveBeenCalledWith('MyProfile', { type: 'saas', url: 'http://test.com' });
             expect(configMod.saveConfig).toHaveBeenCalledWith(expect.objectContaining({ activeProfile: 'MyProfile' }));
             expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('saved successfully'));
