@@ -18,5 +18,6 @@ mage-remote-run commands are grouped by resource type. Each command uses the act
 - `product`: Inspect product types and attributes.
 - `eav`: Manage attribute sets.
 - `tax`: Manage tax classes.
+- `company`: Manage company information.
 
 Run `mage-remote-run --help` to see all available commands and global options.

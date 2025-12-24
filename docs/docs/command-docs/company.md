@@ -1,4 +1,4 @@
-# Company Commands
+# company
 
 Manage B2B companies in Adobe Commerce.
 
