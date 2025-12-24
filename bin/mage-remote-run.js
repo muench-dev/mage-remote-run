@@ -26,6 +26,7 @@ import { registerEavCommands } from '../lib/commands/eav.js';
 import { registerProductsCommands } from '../lib/commands/products.js';
 import { registerTaxCommands } from '../lib/commands/tax.js';
 import { registerInventoryCommands } from '../lib/commands/inventory.js';
+import { registerAdobeIoEventsCommands } from '../lib/commands/adobe-io-events.js';
 
 registerConnectionCommands(program);
 registerWebsitesCommands(program);
@@ -36,6 +37,7 @@ registerEavCommands(program);
 registerProductsCommands(program);
 registerTaxCommands(program);
 registerInventoryCommands(program);
+registerAdobeIoEventsCommands(program);
 
 function resolveCommandMatch(parent, token) {
     const tokenLower = token.toLowerCase();
