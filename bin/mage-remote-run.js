@@ -38,40 +38,12 @@ program
 
 
 
-import { registerWebsitesCommands } from '../lib/commands/websites.js';
-import { registerStoresCommands } from '../lib/commands/stores.js';
-import { registerConnectionCommands } from '../lib/commands/connections.js';
-import { registerCustomersCommands } from '../lib/commands/customers.js';
-import { registerOrdersCommands } from '../lib/commands/orders.js';
-import { registerEavCommands } from '../lib/commands/eav.js';
-import { registerProductsCommands } from '../lib/commands/products.js';
-import { registerCompanyCommands } from '../lib/commands/company.js';
-import { registerTaxCommands } from '../lib/commands/tax.js';
-import { registerInventoryCommands } from '../lib/commands/inventory.js';
-import { registerAdobeIoEventsCommands } from '../lib/commands/adobe-io-events.js';
-import { registerWebhooksCommands } from '../lib/commands/webhooks.js';
+import { registerCommands } from '../lib/command-registry.js';
 import { getActiveProfile } from '../lib/config.js';
-
-registerConnectionCommands(program);
 
 const profile = await getActiveProfile();
 
-if (profile) {
-    registerWebsitesCommands(program);
-    registerStoresCommands(program);
-    registerCustomersCommands(program);
-    registerOrdersCommands(program);
-    registerEavCommands(program);
-    registerProductsCommands(program);
-    registerTaxCommands(program);
-    registerInventoryCommands(program);
-
-    if (profile.type === 'ac-cloud-paas' || profile.type === 'ac-saas') {
-        registerAdobeIoEventsCommands(program);
-        registerCompanyCommands(program);
-        registerWebhooksCommands(program);
-    }
-}
+registerCommands(program, profile);
 
 program.hook('preAction', async (thisCommand, actionCommand) => {
     // Check if we have an active profile and if format is not json/xml
