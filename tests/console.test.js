@@ -152,4 +152,38 @@ describe('Console Command', () => {
             });
         });
     });
+
+    describe('Evaluator', () => {
+        const runEval = (options, input) => new Promise((resolve) => {
+            options.eval.call(replMock, input, {}, '', () => resolve());
+        });
+
+        test('should block console command inside repl', async () => {
+            const options = await getReplOptions();
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+            const parseSpy = jest.spyOn(localProgramCapture, 'parseAsync').mockResolvedValue();
+
+            await runEval(options, 'console');
+
+            expect(parseSpy).not.toHaveBeenCalled();
+            expect(replMock.eval).not.toHaveBeenCalled();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('console/repl'));
+
+            consoleErrorSpy.mockRestore();
+        });
+
+        test('should block mcp command inside repl', async () => {
+            const options = await getReplOptions();
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+            const parseSpy = jest.spyOn(localProgramCapture, 'parseAsync').mockResolvedValue();
+
+            await runEval(options, 'mcp');
+
+            expect(parseSpy).not.toHaveBeenCalled();
+            expect(replMock.eval).not.toHaveBeenCalled();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('mcp'));
+
+            consoleErrorSpy.mockRestore();
+        });
+    });
 });
