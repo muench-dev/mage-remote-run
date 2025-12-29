@@ -70,6 +70,7 @@ describe('Console Command', () => {
             completer: defaultCompleterMock, // Use the variable
             pause: jest.fn(),
             resume: jest.fn(),
+            close: jest.fn(),
         };
         mockStart.mockReturnValue(replMock);
 
@@ -84,7 +85,8 @@ describe('Console Command', () => {
     const getReplOptions = async () => {
         registerConsoleCommand(program);
         await program.parseAsync(['node', 'test', 'console']);
-        return mockStart.mock.calls[0][0];
+        // 0 is the dummy REPL, 1 is the real REPL
+        return mockStart.mock.calls[1][0];
     };
 
     test('should register console command', () => {
@@ -104,8 +106,8 @@ describe('Console Command', () => {
 
         beforeEach(async () => {
             // Ensure command is run
-            await getReplOptions();
-            completer = replMock.completer;
+            const opts = await getReplOptions();
+            completer = opts.completer;
         });
 
         test('should complete top-level commands', (done) => {
