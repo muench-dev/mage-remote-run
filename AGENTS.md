@@ -6,34 +6,62 @@ This document provides context for AI agents working on this codebase.
 
 `mage-remote-run` is a Node.js CLI for interacting with Magento APIs. It uses `commander` for CLI structure and `axios` for API requests.
 
+
+
 ## Architecture
 
 - **Entry Point**: `bin/mage-remote-run.js`.
-- **Commands**: Located in `lib/commands/`. Each file exports a function `register[Name]Commands(program)` which attaches commands to the main program.
+- **Command Registry**: `lib/command-registry.js` manages command registration.
+    - `registerCoreCommands`: Registers standard commands (websites, stores, customers, products, etc.).
+    - `registerCloudCommands`: Registers cloud-specific commands (Adobe I/O Events, Company, Webhooks).
+    - **Selective Registration**: Commands are registered based on the active profile's type. e.g., Cloud commands are only available for `ac-cloud-paas` and `ac-saas`.
+- **Connection Types**:
+    - **SaaS** (`ac-saas`, `saas`): Uses `SaasClient` (OpenAPI based).
+    - **PaaS/On-Prem** (`magento-os`, `mage-os`, `ac-on-prem`, `ac-cloud-paas`, `paas`): Uses `PaasClient` (REST API based).
+    - Factory: `lib/api/factory.js` instantiates the correct client based on the profile type.
 - **Configuration**: `lib/config.js` handles loading/saving profiles using `env-paths`.
-- **API Factory**: `lib/api/factory.js` creates API clients. It supports switching between SaaS (OpenAPI) and PaaS/On-Prem adapters (although currently heavily mocked/abstracted).
 
-## Key Conventions
+## REPL (Console)
 
-- **ES Modules**: The project uses ESM (`type: "module"` in `package.json`).
-- **Mocking**: Tests use `jest.unstable_mockModule` to mock ESM dependencies. **CRITICAL**: When mocking `@inquirer/prompts`, verify if you need to access the module namespace object or if named exports are sufficient. Previous issues showed conflicts when destructuring mocked functions directly in tests.
-- **User Interaction**: Use `@inquirer/prompts` for all interactive prompts.
-- **Output**: Use `chalk` for coloring and `console.log` for output. Errors should be handled via a central `handleError` utility (or standard try/catch blocks logging to `console.error`).
+- **Entry Point**: `lib/commands/console.js`.
+- **Functionality**: Provides an interactive shell (`mage-remote-run console`) with autocomplete.
+- **Context**: Exposes `client` (API factory), `config`, and `chalk` for JavaScript execution.
+- **Commands**: Can execute standard CLI commands directly within the REPL.
+- **State**: Dynamically handles profile switching within the session.
+
+## MCP Server
+
+- **Entry Point**: `lib/mcp.js`.
+- **Protocol**: Implements the Model Context Protocol (MCP).
+- **Transports**: Supports `stdio` (default) and `http` (SSE).
+- **Discovery**: Automatically converts registered CLI commands into MCP tools (e.g., `website list` becomes `website_list`).
+- **Execution**: Captures stdout/stderr of command execution to return as tool results.
+
+## Debug Mode
+
+- **Enable**: Set the environment variable `DEBUG=1` (or any value) to enable debug output.
+    - Example: `DEBUG=1 mage-remote-run connection test`
+- **Output**: Debug messages are typically printed using `console.log` or `console.error` with `chalk.gray` or standard error output.
+- **Usage**: Use `process.env.DEBUG` to conditionally log detailed information during development or troubleshooting.
 
 ## Testing
 
-- Run `npm test` to verify changes.
-- Tests are co-located in `tests/`.
-- Mocks are essential for `config.js`, `api/factory.js`, and external CLI libraries to avoid side effects during testing.
+- **Requirement**: **Every new command must be covered by tests.**
+- **Tool**: Jest is used for testing.
+- **Run Tests**: `npm test`
+- **Location**: Tests are located in `tests/`.
+- **Mocking**: Extensive use of `jest.unstable_mockModule` for ESM mocking. Pay attention to mocking external dependencies like `@inquirer/prompts` and `axios`.
 
-## Common Tasks
+## Documentation
 
-- **Adding a Command**:
-    1. Create `lib/commands/<entity>.js`.
-    2. Define `register<Entity>Commands`.
-    3. Register it in `bin/mage-remote-run.js`.
-    4. Add unit tests in `tests/<entity>.test.js`.
+- **Requirement**: **Every command must be documented.**
+- **Location**: `docs/docs/command-docs/`.
+- **Format**: Markdown files with Frontmatter for sidebar positioning.
+- **Ordering**: Keep `index.md` first, then sort alphabetically.
 
-## Docs
+## Key Conventions
 
-- **Command Docs Ordering**: In `docs/docs/command-docs`, keep `index.md` (Command Reference) first, then sort the remaining files alphabetically by filename. Update each file's `sidebar_position` to match that order.
+- **ES Modules**: The project uses ESM.
+- **User Interaction**: Use `@inquirer/prompts`.
+- **Output**: Use `chalk` for colors.
+
