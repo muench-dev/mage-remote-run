@@ -108,6 +108,42 @@ describe('Company Commands', () => {
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Company created with ID: 100'));
     });
 
+    it('update: should update company details', async () => {
+        // Mock get existing
+        mockClient.get.mockResolvedValue({
+            id: 1,
+            company_name: 'Old Name',
+            company_email: 'old@example.com',
+            sales_representative_id: 1,
+            customer_group_id: 1
+        });
+
+        // Mock prompt answers
+        inquirer.default.prompt.mockResolvedValue({
+            company_name: 'New Name',
+            company_email: 'new@example.com',
+            sales_representative_id: '2',
+            customer_group_id: '2'
+        });
+
+        mockClient.put.mockResolvedValue({});
+
+        await program.parseAsync(['node', 'test', 'company', 'update', '1']);
+
+        expect(mockClient.get).toHaveBeenCalledWith('V1/company/1');
+
+        // Expect wrapped payload
+        expect(mockClient.put).toHaveBeenCalledWith('V1/company/1', expect.objectContaining({
+            company: expect.objectContaining({
+                id: 1,
+                company_name: 'New Name',
+                sales_representative_id: '2',
+                customer_group_id: '2'
+            })
+        }));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Company 1 updated'));
+    });
+
     it('delete: should delete company if confirmed', async () => {
         inquirer.default.prompt.mockResolvedValue({ confirm: true });
         mockClient.delete.mockResolvedValue({});
