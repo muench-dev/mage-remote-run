@@ -19,6 +19,7 @@ This document provides context for AI agents working on this codebase.
     - **SaaS** (`ac-saas`, `saas`): Uses `SaasClient` (OpenAPI based).
     - **PaaS/On-Prem** (`magento-os`, `mage-os`, `ac-on-prem`, `ac-cloud-paas`, `paas`): Uses `PaasClient` (REST API based).
     - Factory: `lib/api/factory.js` instantiates the correct client based on the profile type.
+- **API Specs**: Located in `api-specs/`. `lib/api/spec-loader.js` loads OpenAPI definitions (e.g., `swagger-saas.json`) which are used by `SaasClient` to generate API methods via `openapi-client-axios`.
 - **Configuration**: `lib/config.js` handles loading/saving profiles using `env-paths`.
 
 ## REPL (Console)
