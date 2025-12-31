@@ -70,6 +70,6 @@ The CLI stores configuration (profiles) and cache data in system-specific defaul
 
 | OS | Configuration Path (`config.json`) | Cache Path (`token-cache.json`) |
 |---|---|---|
-| **macOS** | `~/Library/Preferences/mage-remote-run` | `~/Library/Caches/mage-remote-run` |
+| **macOS** | `~/.config/mage-remote-run` | `~/Library/Caches/mage-remote-run` |
 | **Linux** | `~/.config/mage-remote-run` | `~/.cache/mage-remote-run` |
 | **Windows** | `%APPDATA%\mage-remote-run\Config` | `%LOCALAPPDATA%\mage-remote-run\Cache` |
