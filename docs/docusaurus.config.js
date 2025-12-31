@@ -40,8 +40,8 @@ const navbarItems = [
 const config = {
   title: 'mage-remote-run',
   tagline: 'Remote Magento CLI',
-  url: 'https://muench-dev.github.io',
-  baseUrl: '/mage-remote-run/',
+  url: 'https://mage-remote-run.muench-dev',
+  baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
