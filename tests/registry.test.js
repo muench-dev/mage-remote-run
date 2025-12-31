@@ -18,7 +18,8 @@ const registrars = {
     registerImportCommands: jest.fn(),
     registerConsoleCommand: jest.fn(),
     registerConnectionCommands: jest.fn(),
-    registerCartCommands: jest.fn()
+    registerCartCommands: jest.fn(),
+    registerModulesCommands: jest.fn()
 };
 
 // Mock individual modules
@@ -38,6 +39,7 @@ jest.unstable_mockModule('../lib/commands/purchase-order-cart.js', () => ({ regi
 jest.unstable_mockModule('../lib/commands/import.js', () => ({ registerImportCommands: registrars.registerImportCommands }));
 jest.unstable_mockModule('../lib/commands/console.js', () => ({ registerConsoleCommand: registrars.registerConsoleCommand }));
 jest.unstable_mockModule('../lib/commands/cart.js', () => ({ registerCartCommands: registrars.registerCartCommands }));
+jest.unstable_mockModule('../lib/commands/modules.js', () => ({ registerModulesCommands: registrars.registerModulesCommands }));
 
 const { registerCommands } = await import('../lib/command-registry.js');
 
@@ -78,6 +80,7 @@ describe('Command Registry', () => {
         const profile = { type: 'magento-os' };
         registerCommands(program, profile);
         expectCoreCommands();
+        expect(registrars.registerModulesCommands).toHaveBeenCalledWith(program, profile);
         expect(registrars.registerCompanyCommands).not.toHaveBeenCalled();
         expect(registrars.registerEventsCommands).not.toHaveBeenCalled();
         expect(registrars.registerWebhooksCommands).not.toHaveBeenCalled();
@@ -88,6 +91,7 @@ describe('Command Registry', () => {
         const profile = { type: 'mage-os' };
         registerCommands(program, profile);
         expectCoreCommands();
+        expect(registrars.registerModulesCommands).toHaveBeenCalledWith(program, profile);
         expect(registrars.registerCompanyCommands).not.toHaveBeenCalled();
     });
 
@@ -100,6 +104,7 @@ describe('Command Registry', () => {
         expect(registrars.registerCompanyCommands).toHaveBeenCalledWith(program, profile);
         expect(registrars.registerPurchaseOrderCartCommands).toHaveBeenCalledWith(program, profile);
         expect(registrars.registerImportCommands).toHaveBeenCalledWith(program, profile);
+        expect(registrars.registerModulesCommands).toHaveBeenCalledWith(program, profile);
 
         // Cloud specific - should NOT be called
         expect(registrars.registerEventsCommands).not.toHaveBeenCalled();
@@ -114,6 +119,7 @@ describe('Command Registry', () => {
         expect(registrars.registerEventsCommands).toHaveBeenCalledWith(program, profile);
         expect(registrars.registerWebhooksCommands).toHaveBeenCalledWith(program, profile);
         expect(registrars.registerImportCommands).toHaveBeenCalledWith(program, profile);
+        expect(registrars.registerModulesCommands).toHaveBeenCalledWith(program, profile);
     });
 
     test('ac-saas: registers all commands', () => {
@@ -124,5 +130,6 @@ describe('Command Registry', () => {
         expect(registrars.registerEventsCommands).toHaveBeenCalledWith(program, profile);
         expect(registrars.registerWebhooksCommands).toHaveBeenCalledWith(program, profile);
         expect(registrars.registerImportCommands).toHaveBeenCalledWith(program, profile);
+        expect(registrars.registerModulesCommands).not.toHaveBeenCalled();
     });
 });

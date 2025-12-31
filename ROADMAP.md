@@ -38,6 +38,7 @@ Implemented command families (top-level commands) include:
   - [x] `import`
   - [x] `console`
   - [x] `mcp`
+  - [x] `module`
 
 ### Observed Coverage (Specs vs CLI)
 
@@ -101,7 +102,9 @@ To keep the CLI predictable, each API “group” should map to a top-level comm
 
 - [ ] `bulk` (job status + progress)
 - [ ] `directory` (PaaS-only)
-- [ ] `modules` (SaaS-only)
+- [ ] `directory` (PaaS-only)
+- [x] `modules`
+- [ ] `integration` / `token` (admin/customer tokens)
 - [ ] `integration` / `token` (admin/customer tokens)
 - [ ] `tfa` (PaaS-only)
 
@@ -261,5 +264,6 @@ Use this as a “missing list” to drive implementation planning:
   - [ ] (PaaS) `directory`
   - [ ] (PaaS) `integration`
   - [ ] (PaaS) `tfa`
-  - [ ] (SaaS) `modules`
+  - [ ] (PaaS) `tfa`
+  - [x] `modules`
   - [ ] (SaaS) `oope_*`
