@@ -211,7 +211,7 @@ describe('Connection Commands', () => {
             await program.parseAsync(['node', 'test', 'connection', 'select']);
 
             expect(configMod.saveConfig).toHaveBeenCalledWith(expect.objectContaining({ activeProfile: 'New' }));
-            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Active profile set to "New"'));
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Active Profile'), expect.stringContaining('New'));
         });
     });
 });
