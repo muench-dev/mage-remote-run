@@ -17,7 +17,8 @@ const registrars = {
     registerPurchaseOrderCartCommands: jest.fn(),
     registerImportCommands: jest.fn(),
     registerConsoleCommand: jest.fn(),
-    registerConnectionCommands: jest.fn()
+    registerConnectionCommands: jest.fn(),
+    registerCartCommands: jest.fn()
 };
 
 // Mock individual modules
@@ -36,6 +37,7 @@ jest.unstable_mockModule('../lib/commands/webhooks.js', () => ({ registerWebhook
 jest.unstable_mockModule('../lib/commands/purchase-order-cart.js', () => ({ registerPurchaseOrderCartCommands: registrars.registerPurchaseOrderCartCommands }));
 jest.unstable_mockModule('../lib/commands/import.js', () => ({ registerImportCommands: registrars.registerImportCommands }));
 jest.unstable_mockModule('../lib/commands/console.js', () => ({ registerConsoleCommand: registrars.registerConsoleCommand }));
+jest.unstable_mockModule('../lib/commands/cart.js', () => ({ registerCartCommands: registrars.registerCartCommands }));
 
 const { registerCommands } = await import('../lib/command-registry.js');
 
@@ -61,6 +63,7 @@ describe('Command Registry', () => {
         expect(registrars.registerEavCommands).toHaveBeenCalled();
         expect(registrars.registerProductsCommands).toHaveBeenCalled();
         expect(registrars.registerTaxCommands).toHaveBeenCalled();
+        expect(registrars.registerCartCommands).toHaveBeenCalled();
         expect(registrars.registerInventoryCommands).toHaveBeenCalled();
         expect(registrars.registerConsoleCommand).toHaveBeenCalled();
     };
