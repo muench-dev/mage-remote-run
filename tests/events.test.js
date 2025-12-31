@@ -29,7 +29,8 @@ jest.unstable_mockModule('chalk', () => ({
 
 // Mock Config
 jest.unstable_mockModule('../lib/config.js', () => ({
-    getActiveProfile: jest.fn()
+    getActiveProfile: jest.fn(),
+    loadConfig: jest.fn()
 }));
 
 const factoryMod = await import('../lib/api/factory.js');

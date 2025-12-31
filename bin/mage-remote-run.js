@@ -39,14 +39,14 @@ program
 
 
 import {
-  registerConnectionCommands,
-  registerCoreCommands,
-  registerCloudCommands
+  registerCommands
 } from '../lib/command-registry.js';
 import { getActiveProfile } from '../lib/config.js';
 import { startMcpServer } from '../lib/mcp.js';
 
-registerConnectionCommands(program);
+// Connection commands are registered dynamically via registerCommands
+// But we need them registered early if we want them to show up in help even if config fails?
+// Actually registerCommands handles null profile by registering connection commands only.
 
 program.command('mcp')
   .description('Run as MCP server')
@@ -58,14 +58,7 @@ program.command('mcp')
   });
 
 const profile = await getActiveProfile();
-
-if (profile) {
-  registerCoreCommands(program);
-
-  if (profile.type === 'ac-cloud-paas' || profile.type === 'ac-saas') {
-    registerCloudCommands(program);
-  }
-}
+registerCommands(program, profile);
 
 program.hook('preAction', async (thisCommand, actionCommand) => {
   // Check if we have an active profile and if format is not json/xml
