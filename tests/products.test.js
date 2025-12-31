@@ -120,4 +120,15 @@ describe('Product Commands', () => {
         expect(mockClient.get).toHaveBeenCalledWith('V1/products/TS123/media');
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
     });
+
+    it('link-type list: should list product link types', async () => {
+        mockClient.get.mockResolvedValue([
+            { code: 1, name: 'related' }
+        ]);
+
+        await program.parseAsync(['node', 'test', 'product', 'link-type', 'list']);
+
+        expect(mockClient.get).toHaveBeenCalledWith('V1/products/links/types', {}, expect.any(Object));
+        expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+    });
 });

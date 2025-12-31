@@ -85,3 +85,19 @@ List available attribute input types.
 ```bash
 mage-remote-run product attribute type list
 ```
+
+## `product link-type`
+
+Commands for managing product link types.
+
+### `product link-type list`
+
+List available product link types.
+
+```bash
+mage-remote-run product link-type list
+mage-remote-run product link-type list --format json
+```
+
+**Options:**
+- `-f, --format <type>`: Output format (text, json, xml)
