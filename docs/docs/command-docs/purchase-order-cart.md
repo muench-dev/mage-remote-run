@@ -8,7 +8,7 @@ sidebar_position: 4
 Manage checkout carts for Purchase Orders.
 
 :::info
-These commands are available only when B2B features are enabled (Commerce Cloud/SaaS).
+These commands are available only when B2B modules are detected. For PaaS/On-Prem profiles, B2B modules are checked during `connection add` or `connection edit`.
 :::
 
 ## Get Totals

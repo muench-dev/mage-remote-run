@@ -20,6 +20,7 @@ Prompts include:
 - System type (Open Source, Mage-OS, Adobe Commerce on-prem, PaaS, SaaS)
 - Instance URL
 - Authentication method and credentials
+- For Adobe Commerce PaaS/On-Prem, the CLI checks installed modules and stores whether B2B modules are available.
 
 ## connection list
 

@@ -98,8 +98,8 @@ describe('Command Registry', () => {
         expect(registrars.registerCompanyCommands).not.toHaveBeenCalled();
     });
 
-    test('ac-on-prem: registers core + commerce + import', () => {
-        const profile = { type: 'ac-on-prem' };
+    test('ac-on-prem: registers core + commerce + import when B2B is available', () => {
+        const profile = { type: 'ac-on-prem', b2bModulesAvailable: true };
         registerCommands(program, profile);
         expectCoreCommands();
 
@@ -114,11 +114,33 @@ describe('Command Registry', () => {
         expect(registrars.registerWebhooksCommands).not.toHaveBeenCalled();
     });
 
+    test('ac-on-prem: skips commerce commands when B2B is unavailable', () => {
+        const profile = { type: 'ac-on-prem', b2bModulesAvailable: false };
+        registerCommands(program, profile);
+        expectCoreCommands();
+        expect(registrars.registerCompanyCommands).not.toHaveBeenCalled();
+        expect(registrars.registerPurchaseOrderCartCommands).not.toHaveBeenCalled();
+        expect(registrars.registerImportCommands).toHaveBeenCalledWith(program, profile);
+        expect(registrars.registerModulesCommands).toHaveBeenCalledWith(program, profile);
+    });
+
     test('ac-cloud-paas: registers all commands', () => {
-        const profile = { type: 'ac-cloud-paas' };
+        const profile = { type: 'ac-cloud-paas', b2bModulesAvailable: true };
         registerCommands(program, profile);
         expectCoreCommands();
         expect(registrars.registerCompanyCommands).toHaveBeenCalledWith(program, profile);
+        expect(registrars.registerEventsCommands).toHaveBeenCalledWith(program, profile);
+        expect(registrars.registerWebhooksCommands).toHaveBeenCalledWith(program, profile);
+        expect(registrars.registerImportCommands).toHaveBeenCalledWith(program, profile);
+        expect(registrars.registerModulesCommands).toHaveBeenCalledWith(program, profile);
+    });
+
+    test('ac-cloud-paas: skips commerce commands when B2B is unavailable', () => {
+        const profile = { type: 'ac-cloud-paas', b2bModulesAvailable: false };
+        registerCommands(program, profile);
+        expectCoreCommands();
+        expect(registrars.registerCompanyCommands).not.toHaveBeenCalled();
+        expect(registrars.registerPurchaseOrderCartCommands).not.toHaveBeenCalled();
         expect(registrars.registerEventsCommands).toHaveBeenCalledWith(program, profile);
         expect(registrars.registerWebhooksCommands).toHaveBeenCalledWith(program, profile);
         expect(registrars.registerImportCommands).toHaveBeenCalledWith(program, profile);

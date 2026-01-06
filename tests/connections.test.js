@@ -105,6 +105,79 @@ describe('Connection Commands', () => {
             expect(configMod.saveConfig).toHaveBeenCalledWith(expect.objectContaining({ activeProfile: 'MyProfile' }));
             expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('saved successfully'));
         });
+
+        it('should detect B2B modules for Adobe Commerce PaaS/On-Prem', async () => {
+            inquirerPrompts.input.mockResolvedValue('Commerce');
+            promptsMod.askForProfileSettings.mockResolvedValue({ type: 'ac-on-prem', url: 'http://ac.test' });
+            configMod.loadConfig.mockResolvedValue({
+                profiles: {},
+                activeProfile: null
+            });
+
+            inquirerPrompts.confirm.mockResolvedValueOnce(false);
+
+            const mockClient = { get: jest.fn().mockResolvedValue([
+                'Magento_Company',
+                'Magento_CompanyCredit',
+                'Magento_CompanyPayment',
+                'Magento_CompanyShipping',
+                'Magento_NegotiableQuote',
+                'Magento_PurchaseOrder',
+                'Magento_RequisitionList',
+                'Magento_SharedCatalog'
+            ]) };
+            factoryMod.createClient.mockResolvedValue(mockClient);
+
+            await program.parseAsync(['node', 'test', 'connection', 'add']);
+
+            expect(factoryMod.createClient).toHaveBeenCalledWith(expect.objectContaining({ type: 'ac-on-prem' }));
+            expect(mockClient.get).toHaveBeenCalledWith('V1/modules');
+            expect(configMod.addProfile).toHaveBeenCalledWith('Commerce', expect.objectContaining({
+                type: 'ac-on-prem',
+                b2bModulesAvailable: true
+            }));
+        });
+
+        it('should mark B2B modules available for Adobe Commerce SaaS', async () => {
+            inquirerPrompts.input.mockResolvedValue('Commerce');
+            promptsMod.askForProfileSettings.mockResolvedValue({ type: 'ac-saas', url: 'http://saas.test' });
+            configMod.loadConfig.mockResolvedValue({
+                profiles: {},
+                activeProfile: null
+            });
+
+            inquirerPrompts.confirm.mockResolvedValueOnce(false);
+
+            await program.parseAsync(['node', 'test', 'connection', 'add']);
+
+            expect(factoryMod.createClient).not.toHaveBeenCalled();
+            expect(configMod.addProfile).toHaveBeenCalledWith('Commerce', expect.objectContaining({
+                type: 'ac-saas',
+                b2bModulesAvailable: true
+            }));
+        });
+
+        it('should set b2bModulesAvailable false when module lookup fails', async () => {
+            inquirerPrompts.input.mockResolvedValue('Commerce');
+            promptsMod.askForProfileSettings.mockResolvedValue({ type: 'ac-cloud-paas', url: 'http://paas.test' });
+            configMod.loadConfig.mockResolvedValue({
+                profiles: {},
+                activeProfile: null
+            });
+
+            inquirerPrompts.confirm.mockResolvedValueOnce(false);
+
+            const mockClient = { get: jest.fn().mockRejectedValue(new Error('No access')) };
+            factoryMod.createClient.mockResolvedValue(mockClient);
+
+            await program.parseAsync(['node', 'test', 'connection', 'add']);
+
+            expect(mockClient.get).toHaveBeenCalledWith('V1/modules');
+            expect(configMod.addProfile).toHaveBeenCalledWith('Commerce', expect.objectContaining({
+                type: 'ac-cloud-paas',
+                b2bModulesAvailable: null
+            }));
+        });
     });
 
     describe('connection list', () => {
@@ -119,6 +192,47 @@ describe('Connection Commands', () => {
             await program.parseAsync(['node', 'test', 'connection', 'list']);
 
             expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+        });
+
+        it('should include B2B status for Adobe Commerce profiles', async () => {
+            configMod.loadConfig.mockResolvedValue({
+                profiles: {
+                    'SaaS': { type: 'ac-saas', url: 'http://saas.test' },
+                    'PaaS': { type: 'ac-cloud-paas', url: 'http://paas.test', b2bModulesAvailable: false }
+                },
+                activeProfile: 'SaaS'
+            });
+
+            const mockClient = { get: jest.fn().mockResolvedValue([]) };
+            factoryMod.createClient.mockResolvedValue(mockClient);
+
+            await program.parseAsync(['node', 'test', 'connection', 'list']);
+
+            expect(mockClient.get).toHaveBeenCalledWith('V1/modules');
+            expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+        });
+
+        it('should detect B2B status when missing and persist it', async () => {
+            configMod.loadConfig.mockResolvedValue({
+                profiles: {
+                    'OnPrem': { type: 'ac-on-prem', url: 'http://ac.test' }
+                },
+                activeProfile: 'OnPrem'
+            });
+
+            const mockClient = { get: jest.fn().mockResolvedValue(['Magento_Company']) };
+            factoryMod.createClient.mockResolvedValue(mockClient);
+
+            await program.parseAsync(['node', 'test', 'connection', 'list']);
+
+            expect(mockClient.get).toHaveBeenCalledWith('V1/modules');
+            expect(configMod.saveConfig).toHaveBeenCalledWith(expect.objectContaining({
+                profiles: expect.objectContaining({
+                    OnPrem: expect.objectContaining({
+                        b2bModulesAvailable: false
+                    })
+                })
+            }));
         });
     });
 
@@ -194,6 +308,32 @@ describe('Connection Commands', () => {
             await program.parseAsync(['node', 'test', 'connection', 'status']);
 
             expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Active Profile'), expect.stringContaining('MyProfile'));
+        });
+
+        it('should show B2B module status for Adobe Commerce PaaS/On-Prem', async () => {
+            configMod.loadConfig.mockResolvedValue({
+                activeProfile: 'Commerce',
+                profiles: { 'Commerce': { type: 'ac-on-prem', url: 'http://ac.test', b2bModulesAvailable: true } }
+            });
+
+            const mockClient = { get: jest.fn().mockResolvedValue([]) };
+            factoryMod.createClient.mockResolvedValue(mockClient);
+
+            await program.parseAsync(['node', 'test', 'connection', 'status']);
+
+            expect(mockClient.get).toHaveBeenCalledWith('V1/modules');
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('B2B Modules:'));
+        });
+
+        it('should show B2B modules as available for Adobe Commerce SaaS', async () => {
+            configMod.loadConfig.mockResolvedValue({
+                activeProfile: 'Commerce',
+                profiles: { 'Commerce': { type: 'ac-saas', url: 'http://saas.test' } }
+            });
+
+            await program.parseAsync(['node', 'test', 'connection', 'status']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith('B2B Modules: Yes');
         });
     });
 

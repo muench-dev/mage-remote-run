@@ -8,7 +8,7 @@ sidebar_position: 3
 Manage B2B companies in Adobe Commerce.
 
 :::info
-These commands are available only for **Adobe Commerce (Cloud/SaaS)** connection profiles.
+These commands are available only for **Adobe Commerce** profiles with B2B modules detected. For PaaS/On-Prem profiles, B2B modules are checked during `connection add` or `connection edit`.
 :::
 
 ## List Companies
