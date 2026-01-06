@@ -10,6 +10,7 @@ const pkg = require('../package.json');
 
 const program = new Command();
 
+
 program
   .name('mage-remote-run')
   .description('The remote swiss army knife for Magento Open Source, Mage-OS, Adobe Commerce')
@@ -48,12 +49,18 @@ import { startMcpServer } from '../lib/mcp.js';
 // But we need them registered early if we want them to show up in help even if config fails?
 // Actually registerCommands handles null profile by registering connection commands only.
 
-program.command('mcp')
+program.command('mcp [args...]')
   .description('Run as MCP server')
   .option('--transport <type>', 'Transport type (stdio, http)', 'stdio')
   .option('--host <host>', 'HTTP Host', '127.0.0.1')
   .option('--port <port>', 'HTTP Port', '18098')
-  .action(async (options) => {
+  .allowExcessArguments(true)
+  .allowUnknownOption(true)
+  .action(async (args, options) => {
+    // We ignore extra arguments but log them for debugging purposes
+    if (args && args.length > 0) {
+      // console.error(chalk.yellow(`[mage-remote-run] Warning: Received extra arguments for mcp command: ${args.join(' ')}`));
+    }
     await startMcpServer(options);
   });
 
@@ -68,7 +75,8 @@ program.hook('preAction', async (thisCommand, actionCommand) => {
     const config = await loadConfig();
     if (config.showActiveConnectionHeader !== false) {
       const opts = actionCommand.opts();
-      if (opts.format !== 'json' && opts.format !== 'xml') {
+      // Standard output corruption check: Don't print header if output is json/xml OR if running mcp command (which uses stdio)
+      if (opts.format !== 'json' && opts.format !== 'xml' && actionCommand.name() !== 'mcp') {
         console.log(chalk.cyan(`Active Connection: ${chalk.bold(profile.name)} (${profile.type})`));
         console.log(chalk.gray('━'.repeat(60)) + '\n');
       }
