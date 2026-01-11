@@ -6,21 +6,20 @@ This document provides context for AI agents working on this codebase.
 
 `mage-remote-run` is a Node.js CLI for interacting with Magento APIs. It uses `commander` for CLI structure and `axios` for API requests.
 
-
-
 ## Architecture
 
 - **Entry Point**: `bin/mage-remote-run.js`.
 - **Command Registry**: `lib/command-registry.js` manages command registration.
-    - `registerCoreCommands`: Registers standard commands (websites, stores, customers, products, etc.).
-    - `registerCloudCommands`: Registers cloud-specific commands (Adobe I/O Events, Company, Webhooks).
-    - **Selective Registration**: Commands are registered based on the active profile's type. e.g., Cloud commands are only available for `ac-cloud-paas` and `ac-saas`.
+  - `registerCommands`: Registers connection commands plus groups based on the active profile type.
+  - Groups: CORE (websites, stores, customers, orders, products, cart, tax, inventory, shipments, console), COMMERCE (company, purchase-order-cart), CLOUD (events, webhooks), IMPORT, MODULES.
+  - Backward-compat helpers: `registerCoreCommands`, `registerCloudCommands`, and `registerAllCommands`.
+- **Selective Registration**: Commands are registered by profile type (see `TYPE_MAPPINGS` in `lib/command-registry.js`).
 - **Connection Types**:
-    - **SaaS** (`ac-saas`, `saas`): Uses `SaasClient` (OpenAPI based).
-    - **PaaS/On-Prem** (`magento-os`, `mage-os`, `ac-on-prem`, `ac-cloud-paas`, `paas`): Uses `PaasClient` (REST API based).
-    - Factory: `lib/api/factory.js` instantiates the correct client based on the profile type.
-- **API Specs**: Located in `api-specs/`. `lib/api/spec-loader.js` loads OpenAPI definitions (e.g., `swagger-saas.json`) which are used by `SaasClient` to generate API methods via `openapi-client-axios`.
-- **Configuration**: `lib/config.js` handles loading/saving profiles using `env-paths`.
+  - **SaaS** (`ac-saas`, `saas`): Uses `SaasClient` (OpenAPI based).
+  - **PaaS/On-Prem** (`magento-os`, `mage-os`, `ac-on-prem`, `ac-cloud-paas`, `paas`): Uses `PaasClient` (REST API based).
+  - Factory: `lib/api/factory.js` instantiates the correct client based on the profile type.
+- **API Specs**: Located in `api-specs/2.4.8`. `lib/api/spec-loader.js` loads OpenAPI definitions (`swagger-saas.json`, `swagger-paas.json`) used by `SaasClient` via `openapi-client-axios`.
+- **Configuration**: `lib/config.js` handles loading/saving profiles using `env-paths` and migrates legacy config on macOS.
 
 ## REPL (Console)
 
@@ -41,7 +40,7 @@ This document provides context for AI agents working on this codebase.
 ## Debug Mode
 
 - **Enable**: Set the environment variable `DEBUG=1` (or any value) to enable debug output.
-    - Example: `DEBUG=1 mage-remote-run connection test`
+  - Example: `DEBUG=1 mage-remote-run connection test`
 - **Output**: Debug messages are typically printed using `console.log` or `console.error` with `chalk.gray` or standard error output.
 - **Usage**: Use `process.env.DEBUG` to conditionally log detailed information during development or troubleshooting.
 
@@ -70,5 +69,5 @@ This document provides context for AI agents working on this codebase.
 
 Helper scripts and tools available for development:
 
-- `npm run dev:api-discover`: Parses local Swagger files (`api-specs/`) and lists available API endpoints grouped by domain. Useful for discovering new endpoints to implement.
+- `npm run dev:api-discover`: Parses local Swagger files (`api-specs/2.4.8`) and lists available API endpoints grouped by domain. Useful for discovering new endpoints to implement.
 
