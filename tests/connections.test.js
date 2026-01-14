@@ -51,6 +51,10 @@ jest.unstable_mockModule('cli-table3', () => ({
     }))
 }));
 
+jest.unstable_mockModule('csv-stringify/sync', () => ({
+    stringify: jest.fn(() => 'MOCK_CSV')
+}));
+
 // Dynamic imports are needed after unstable_mockModule
 const configMod = await import('../lib/config.js');
 const factoryMod = await import('../lib/api/factory.js');
@@ -59,6 +63,7 @@ const inquirerPrompts = await import('@inquirer/prompts');
 const { select } = inquirerPrompts;
 const inquirer = await import('inquirer');
 const { registerConnectionCommands } = await import('../lib/commands/connections.js');
+const Table = (await import('cli-table3')).default;
 
 describe('Connection Commands', () => {
     let program;
@@ -178,6 +183,32 @@ describe('Connection Commands', () => {
                 b2bModulesAvailable: null
             }));
         });
+
+        it('should detect Hyva Commerce module', async () => {
+            inquirerPrompts.input.mockResolvedValue('HyvaStore');
+            promptsMod.askForProfileSettings.mockResolvedValue({ type: 'magento-os', url: 'http://hyva.test' });
+            configMod.loadConfig.mockResolvedValue({
+                profiles: {},
+                activeProfile: null
+            });
+
+            inquirerPrompts.confirm.mockResolvedValueOnce(false);
+
+            const mockClient = { get: jest.fn().mockResolvedValue([
+                'Magento_Store',
+                'Hyva_Commerce'
+            ]) };
+            factoryMod.createClient.mockResolvedValue(mockClient);
+
+            await program.parseAsync(['node', 'test', 'connection', 'add']);
+
+            expect(mockClient.get).toHaveBeenCalledWith('V1/modules');
+            expect(configMod.addProfile).toHaveBeenCalledWith('HyvaStore', expect.objectContaining({
+                type: 'magento-os',
+                hyvaCommerceAvailable: true,
+                hyvaThemeAvailable: false
+            }));
+        });
     });
 
     describe('connection list', () => {
@@ -192,6 +223,34 @@ describe('Connection Commands', () => {
             await program.parseAsync(['node', 'test', 'connection', 'list']);
 
             expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+        });
+
+        it('should list profiles in JSON format', async () => {
+            configMod.loadConfig.mockResolvedValue({
+                profiles: {
+                    'TestProfile': { type: 'paas', url: 'http://paas.com' }
+                },
+                activeProfile: 'TestProfile'
+            });
+
+            await program.parseAsync(['node', 'test', 'connection', 'list', '--format', 'json']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(JSON.stringify({
+                'TestProfile': { type: 'paas', url: 'http://paas.com' }
+            }, null, 2));
+        });
+
+        it('should list profiles in CSV format', async () => {
+            configMod.loadConfig.mockResolvedValue({
+                profiles: {
+                    'TestProfile': { type: 'paas', url: 'http://paas.com' }
+                },
+                activeProfile: 'TestProfile'
+            });
+
+            await program.parseAsync(['node', 'test', 'connection', 'list', '--format', 'csv']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_CSV');
         });
 
         it('should include B2B status for Adobe Commerce profiles', async () => {
@@ -307,7 +366,9 @@ describe('Connection Commands', () => {
 
             await program.parseAsync(['node', 'test', 'connection', 'status']);
 
-            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Active Profile'), expect.stringContaining('MyProfile'));
+            expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+            const tableInstance = Table.mock.results[0].value;
+            expect(tableInstance.push).toHaveBeenCalledWith(['Active Profile', expect.stringContaining('MyProfile')]);
         });
 
         it('should show B2B module status for Adobe Commerce PaaS/On-Prem', async () => {
@@ -316,13 +377,24 @@ describe('Connection Commands', () => {
                 profiles: { 'Commerce': { type: 'ac-on-prem', url: 'http://ac.test', b2bModulesAvailable: true } }
             });
 
-            const mockClient = { get: jest.fn().mockResolvedValue([]) };
+            const mockClient = { get: jest.fn().mockResolvedValue([
+                'Magento_Company',
+                'Magento_CompanyCredit',
+                'Magento_CompanyPayment',
+                'Magento_CompanyShipping',
+                'Magento_NegotiableQuote',
+                'Magento_PurchaseOrder',
+                'Magento_RequisitionList',
+                'Magento_SharedCatalog'
+            ]) };
             factoryMod.createClient.mockResolvedValue(mockClient);
 
             await program.parseAsync(['node', 'test', 'connection', 'status']);
 
             expect(mockClient.get).toHaveBeenCalledWith('V1/modules');
-            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('B2B Modules:'));
+            expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+            const tableInstance = Table.mock.results[0].value;
+            expect(tableInstance.push).toHaveBeenCalledWith(['B2B Modules', expect.stringContaining('Yes')]);
         });
 
         it('should show B2B modules as available for Adobe Commerce SaaS', async () => {
@@ -333,7 +405,23 @@ describe('Connection Commands', () => {
 
             await program.parseAsync(['node', 'test', 'connection', 'status']);
 
-            expect(consoleLogSpy).toHaveBeenCalledWith('B2B Modules: Yes');
+            expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+            const tableInstance = Table.mock.results[0].value;
+            expect(tableInstance.push).toHaveBeenCalledWith(['B2B Modules', expect.stringContaining('Yes')]);
+        });
+
+        it('should show Hyva status for Magento OS', async () => {
+             configMod.loadConfig.mockResolvedValue({
+                activeProfile: 'HyvaStore',
+                profiles: { 'HyvaStore': { type: 'magento-os', url: 'http://hyva.test', hyvaCommerceAvailable: true, hyvaThemeAvailable: true } }
+            });
+
+            await program.parseAsync(['node', 'test', 'connection', 'status']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+            const tableInstance = Table.mock.results[0].value;
+            expect(tableInstance.push).toHaveBeenCalledWith(['Hyvä Commerce', expect.stringContaining('Yes')]);
+            expect(tableInstance.push).toHaveBeenCalledWith(['Hyvä Theme', expect.stringContaining('Yes')]);
         });
     });
 
@@ -351,7 +439,9 @@ describe('Connection Commands', () => {
             await program.parseAsync(['node', 'test', 'connection', 'select']);
 
             expect(configMod.saveConfig).toHaveBeenCalledWith(expect.objectContaining({ activeProfile: 'New' }));
-            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Active Profile'), expect.stringContaining('New'));
+            expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+            const tableInstance = Table.mock.results[0].value;
+            expect(tableInstance.push).toHaveBeenCalledWith(['Active Profile', expect.stringContaining('New')]);
         });
     });
 });
