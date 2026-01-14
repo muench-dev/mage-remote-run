@@ -423,6 +423,21 @@ describe('Connection Commands', () => {
             expect(tableInstance.push).toHaveBeenCalledWith(['Hyvä Commerce', expect.stringContaining('Yes')]);
             expect(tableInstance.push).toHaveBeenCalledWith(['Hyvä Theme', expect.stringContaining('Yes')]);
         });
+
+        it('should output JSON when requested', async () => {
+            configMod.loadConfig.mockResolvedValue({
+                activeProfile: 'MyProfile',
+                profiles: { 'MyProfile': { type: 'saas', url: 'http://test.com' } }
+            });
+
+            await program.parseAsync(['node', 'test', 'connection', 'status', '--format', 'json']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(JSON.stringify({
+                activeProfile: 'MyProfile',
+                type: 'saas',
+                url: 'http://test.com'
+            }, null, 2));
+        });
     });
 
     describe('connection select', () => {
