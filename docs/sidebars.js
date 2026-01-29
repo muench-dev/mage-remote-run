@@ -25,6 +25,7 @@ const sidebars = {
     'usage-and-general-commands',
     'updates',
     'compatibility',
+    'ci-integration',
     {
       type: 'category',
       label: 'Command Docs',
