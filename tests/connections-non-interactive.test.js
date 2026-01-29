@@ -117,6 +117,27 @@ describe('Connection Commands (Non-Interactive)', () => {
         }));
     });
 
+    it('should add a SaaS profile with pre-generated token', async () => {
+        configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: null });
+        const mockClient = { get: jest.fn().mockResolvedValue({}) };
+        factoryMod.createClient.mockResolvedValue(mockClient);
+
+        await program.parseAsync([
+            'node', 'test', 'connection', 'add',
+            '--name', 'MySaaSToken',
+            '--type', 'ac-saas',
+            '--url', 'https://saas.test',
+            '--token', 'my-access-token'
+        ]);
+
+        expect(configMod.addProfile).toHaveBeenCalledWith('MySaaSToken', expect.objectContaining({
+            type: 'ac-saas',
+            url: 'https://saas.test',
+            auth: { token: 'my-access-token' },
+            b2bModulesAvailable: true
+        }));
+    });
+
     it('should add a Bearer Token profile non-interactively', async () => {
         configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: 'Other' });
         const mockClient = { get: jest.fn().mockResolvedValue(['Magento_Catalog']) };

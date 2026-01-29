@@ -69,6 +69,24 @@ mage-remote-run connection add \
   --active
 ```
 
+**Adobe Commerce SaaS (Pre-generated Token):**
+```bash
+mage-remote-run connection add \
+  --name "Production" \
+  --type ac-saas \
+  --url "https://example.com" \
+  --token "access_token_here"
+```
+
+**Adobe Commerce Cloud (PaaS) with Integration Token:**
+```bash
+mage-remote-run connection add \
+  --name "MyPaaS" \
+  --type ac-cloud-paas \
+  --url "https://paas.example.com" \
+  --token "integration_token"
+```
+
 **Bearer Token:**
 ```bash
 mage-remote-run connection add \
@@ -76,6 +94,18 @@ mage-remote-run connection add \
   --type magento-os \
   --url "https://staging.example.com" \
   --token "my-token"
+```
+
+**OAuth 1.0a (Standard):**
+```bash
+mage-remote-run connection add \
+  --name "MyOAuth" \
+  --type ac-on-prem \
+  --url "https://example.com" \
+  --consumer-key "ck_..." \
+  --consumer-secret "cs_..." \
+  --access-token "at_..." \
+  --token-secret "ts_..."
 ```
 
 **OAuth 1.0a (with SHA1 for older versions):**
