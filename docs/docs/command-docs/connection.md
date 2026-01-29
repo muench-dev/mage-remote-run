@@ -9,7 +9,9 @@ Manage connection profiles for Magento instances. Profiles store system type, in
 
 ## connection add
 
-Create a new profile via interactive prompts.
+Create a new profile. This command supports both interactive prompts and non-interactive flags for CI/CD pipelines.
+
+### Interactive Mode
 
 ```bash
 mage-remote-run connection add
@@ -20,7 +22,74 @@ Prompts include:
 - System type (Open Source, Mage-OS, Adobe Commerce on-prem, PaaS, SaaS)
 - Instance URL
 - Authentication method and credentials
+- For OAuth 1.0a: Signature Method (HMAC-SHA256 or HMAC-SHA1)
 - For Adobe Commerce PaaS/On-Prem, the CLI checks installed modules and stores whether B2B modules are available.
+
+### Non-Interactive Mode (CI/CD)
+
+You can pass all required parameters as flags. If `--type` is provided, the command runs in non-interactive mode.
+
+**Common Options:**
+
+- `--name <name>`: Profile Name (Required)
+- `--type <type>`: System Type (`magento-os`, `mage-os`, `ac-on-prem`, `ac-cloud-paas`, `ac-saas`)
+- `--url <url>`: Instance URL
+- `--active`: Set as active profile automatically
+- `--no-test`: Skip connection test (useful if the instance is not reachable yet)
+
+**Adobe Commerce SaaS:**
+
+- `--client-id <id>`: Client ID
+- `--client-secret <secret>`: Client Secret
+
+**Bearer Token (REST):**
+
+- `--auth-method bearer` (Optional if `--token` is provided)
+- `--token <token>`: Access Token
+
+**OAuth 1.0a:**
+
+- `--auth-method oauth1` (Optional if keys are provided)
+- `--consumer-key <key>`
+- `--consumer-secret <secret>`
+- `--access-token <token>`
+- `--token-secret <secret>`
+- `--signature-method <method>`: `hmac-sha256` (default) or `hmac-sha1`
+
+### Examples
+
+**Adobe Commerce SaaS:**
+```bash
+mage-remote-run connection add \
+  --name "Production" \
+  --type ac-saas \
+  --url "https://example.com" \
+  --client-id "my-id" \
+  --client-secret "my-secret" \
+  --active
+```
+
+**Bearer Token:**
+```bash
+mage-remote-run connection add \
+  --name "Staging" \
+  --type magento-os \
+  --url "https://staging.example.com" \
+  --token "my-token"
+```
+
+**OAuth 1.0a (with SHA1 for older versions):**
+```bash
+mage-remote-run connection add \
+  --name "Legacy" \
+  --type ac-on-prem \
+  --url "https://legacy.example.com" \
+  --consumer-key "ck" \
+  --consumer-secret "cs" \
+  --access-token "at" \
+  --token-secret "ts" \
+  --signature-method hmac-sha1
+```
 
 ## connection list
 
