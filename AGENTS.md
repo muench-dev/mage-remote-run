@@ -71,3 +71,47 @@ Helper scripts and tools available for development:
 
 - `npm run dev:api-discover`: Parses local Swagger files (`api-specs/2.4.8`) and lists available API endpoints grouped by domain. Useful for discovering new endpoints to implement.
 
+
+## Git Branch names
+
+Branch names should follow the format `type/description`, where `type` indicates the nature of the work (e.g., `feature`, `bugfix`, `hotfix`, `chore`) and `description` is a short, descriptive name of the change.
+
+Use english words, lowercase, and hyphens to separate words. Avoid using spaces or special characters like hashes.
+
+## Git Commit Message Instructions
+
+This project recommends using the [Conventional Commit](https://www.conventionalcommits.org/) format for all commit messages. This helps keep the commit history readable and enables automated tools for changelogs and releases.
+
+### Commit Message Structure
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+- **type**: The kind of change (e.g., `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`)
+- **optional scope**: A section of the codebase affected (e.g., `cache`, `command`, `docs`)
+- **description**: Short summary of the change (imperative, lower case, no period)
+
+### Examples
+
+- `feat: add user login functionality`
+- `fix(cache): correct total price calculation`
+- `docs: update README with installation steps`
+
+### Optional Body
+
+Use the body to provide additional context about the change.
+
+### Optional Footer
+
+Use the footer to reference issues or describe breaking changes.
+
+```
+BREAKING CHANGE: changes the API of the cache command
+
+Closes #123
+```
