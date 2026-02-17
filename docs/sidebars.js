@@ -26,6 +26,7 @@ const sidebars = {
     'updates',
     'compatibility',
     'ci-integration',
+    'plugins',
     {
       type: 'category',
       label: 'Command Docs',
