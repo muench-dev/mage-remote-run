@@ -12,6 +12,7 @@ jest.unstable_mockModule('../lib/config.js', () => ({
 
 const { PluginLoader } = await import('../lib/plugin-loader.js');
 const { loadConfig } = await import('../lib/config.js');
+const { EVENTS } = await import('../lib/events.js');
 
 describe('PluginLoader', () => {
     let context;
@@ -28,7 +29,7 @@ describe('PluginLoader', () => {
         eventBus = {
             on: jest.fn()
         };
-        context = { program, eventBus };
+        context = { program, eventBus, EVENTS };
         jest.clearAllMocks();
     });
 
@@ -46,7 +47,7 @@ describe('PluginLoader', () => {
         
         // Verify plugin did its job
         expect(program.command).toHaveBeenCalledWith('hello');
-        expect(eventBus.on).toHaveBeenCalledWith('beforeCommand', expect.any(Function));
+        expect(eventBus.on).toHaveBeenCalledWith(EVENTS.BEFORE_COMMAND, expect.any(Function));
     });
 
     it('should handle missing plugins gracefully', async () => {
