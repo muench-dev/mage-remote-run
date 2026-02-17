@@ -44,6 +44,8 @@ import {
 } from '../lib/command-registry.js';
 import { getActiveProfile } from '../lib/config.js';
 import { startMcpServer } from '../lib/mcp.js';
+import { PluginLoader } from '../lib/plugin-loader.js';
+import { eventBus, EVENTS } from '../lib/events.js';
 
 // Connection commands are registered dynamically via registerCommands
 // But we need them registered early if we want them to show up in help even if config fails?
@@ -65,9 +67,31 @@ program.command('mcp [args...]')
   });
 
 const profile = await getActiveProfile();
+
+// Load Plugins
+// We construct an initial context.
+// Note: client is not available yet as it is created per command usually, 
+// but we can pass a way to get it or just pass null for now if not used at startup.
+// Also mcpServer is not running here unless mcp command is used.
+const appContext = {
+    program,
+    config: await loadConfig(), // Re-load or reuse config
+    profile,
+    eventBus,
+    EVENTS
+    // We can add a client factory or similar if needed
+};
+
+const pluginLoader = new PluginLoader(appContext);
+await pluginLoader.loadPlugins();
+
+eventBus.emit(EVENTS.INIT, appContext);
+
 registerCommands(program, profile);
 
 program.hook('preAction', async (thisCommand, actionCommand) => {
+  eventBus.emit(EVENTS.BEFORE_COMMAND, { thisCommand, actionCommand, profile });
+
   // Check if we have an active profile and if format is not json/xml
   // Note: 'options' are available on the command that has them defined.
   // actionCommand is the command actually being executed.
@@ -82,6 +106,10 @@ program.hook('preAction', async (thisCommand, actionCommand) => {
       }
     }
   }
+});
+
+program.hook('postAction', async (thisCommand, actionCommand) => {
+    eventBus.emit(EVENTS.AFTER_COMMAND, { thisCommand, actionCommand, profile });
 });
 
 import { expandCommandAbbreviations } from '../lib/command-helper.js';

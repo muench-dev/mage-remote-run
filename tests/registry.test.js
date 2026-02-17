@@ -21,7 +21,8 @@ const registrars = {
     registerCartCommands: jest.fn(),
     registerModulesCommands: jest.fn(),
     registerShipmentCommands: jest.fn(),
-    registerRestCommands: jest.fn()
+    registerRestCommands: jest.fn(),
+    registerPluginsCommands: jest.fn()
 };
 
 // Mock individual modules
@@ -44,6 +45,7 @@ jest.unstable_mockModule('../lib/commands/cart.js', () => ({ registerCartCommand
 jest.unstable_mockModule('../lib/commands/modules.js', () => ({ registerModulesCommands: registrars.registerModulesCommands }));
 jest.unstable_mockModule('../lib/commands/shipments.js', () => ({ registerShipmentCommands: registrars.registerShipmentCommands }));
 jest.unstable_mockModule('../lib/commands/rest.js', () => ({ registerRestCommands: registrars.registerRestCommands }));
+jest.unstable_mockModule('../lib/commands/plugins.js', () => ({ registerPluginsCommands: registrars.registerPluginsCommands }));
 
 const { registerCommands } = await import('../lib/command-registry.js');
 
@@ -74,6 +76,7 @@ describe('Command Registry', () => {
         expect(registrars.registerShipmentCommands).toHaveBeenCalled();
         expect(registrars.registerConsoleCommand).toHaveBeenCalled();
         expect(registrars.registerRestCommands).toHaveBeenCalled();
+        expect(registrars.registerPluginsCommands).toHaveBeenCalled();
     };
 
     test('registers only connection commands if no profile', () => {

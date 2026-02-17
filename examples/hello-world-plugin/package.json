@@ -1,0 +1,10 @@
+{
+  "name": "mage-remote-run-plugin-hello",
+  "version": "1.0.0",
+  "description": "A hello world plugin for mage-remote-run",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "chalk": "^5.0.0"
+  }
+}
