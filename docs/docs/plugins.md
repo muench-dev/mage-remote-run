@@ -92,6 +92,35 @@ export default async function(context) {
 }
 ```
 
+### Using the API Client
+
+Plugins can use the `createClient` factory to obtain an API client for the active connection. This allows plugins to make requests to the Magento/Adobe Commerce REST API.
+
+```javascript
+/**
+ * @param {Object} context
+ * @param {Function} context.createClient - Factory function to create an API client
+ */
+export default async function(context) {
+    const { program, createClient } = context;
+
+    program.command('my-custom-endpoint')
+        .description('Call a custom endpoint')
+        .action(async () => {
+            try {
+                // Create a client for the active profile
+                const client = await createClient();
+
+                // Make a GET request to /V1/custom-endpoint
+                const data = await client.get('V1/custom-endpoint');
+                console.log(data);
+            } catch (error) {
+                console.error(error.message);
+            }
+        });
+}
+```
+
 ### Available Events
 
 #### `EVENTS.INIT` (`init`)
