@@ -5,8 +5,13 @@ jest.unstable_mockModule('../lib/config.js', () => ({
   saveConfig: jest.fn(),
 }));
 
+jest.unstable_mockModule('node:fs/promises', () => ({
+  realpath: jest.fn(async (value) => value),
+}));
+
 const { registerPluginsCommands } = await import('../lib/commands/plugins.js');
 const { loadConfig, saveConfig } = await import('../lib/config.js');
+const { realpath } = await import('node:fs/promises');
 const { Command } = await import('commander');
 
 describe('Plugin Commands', () => {
@@ -35,7 +40,37 @@ describe('Plugin Commands', () => {
 
       expect(loadConfig).toHaveBeenCalled();
       expect(saveConfig).toHaveBeenCalledWith({ plugins: ['my-plugin'] });
+      expect(realpath).not.toHaveBeenCalled();
       expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('successfully registered'));
+    });
+
+    it('should resolve filesystem path with realpath', async () => {
+      loadConfig.mockResolvedValue({ plugins: [] });
+      realpath.mockResolvedValue('/resolved/plugins/my-plugin');
+
+      await program.parseAsync(['node', 'test', 'plugin', 'register', './plugins/my-plugin']);
+
+      expect(realpath).toHaveBeenCalledWith('./plugins/my-plugin');
+      expect(saveConfig).toHaveBeenCalledWith({ plugins: ['/resolved/plugins/my-plugin'] });
+    });
+
+    it('should resolve relative path without dot prefix', async () => {
+      loadConfig.mockResolvedValue({ plugins: [] });
+      realpath.mockResolvedValue('/resolved/plugins/my-plugin');
+
+      await program.parseAsync(['node', 'test', 'plugin', 'register', 'plugins/my-plugin']);
+
+      expect(realpath).toHaveBeenCalledWith('plugins/my-plugin');
+      expect(saveConfig).toHaveBeenCalledWith({ plugins: ['/resolved/plugins/my-plugin'] });
+    });
+
+    it('should not resolve scoped npm package names', async () => {
+      loadConfig.mockResolvedValue({ plugins: [] });
+
+      await program.parseAsync(['node', 'test', 'plugin', 'register', '@scope/my-plugin']);
+
+      expect(realpath).not.toHaveBeenCalled();
+      expect(saveConfig).toHaveBeenCalledWith({ plugins: ['@scope/my-plugin'] });
     });
 
     it('should not register if already exists', async () => {
@@ -63,8 +98,19 @@ describe('Plugin Commands', () => {
 
       await program.parseAsync(['node', 'test', 'plugin', 'unregister', 'plugin-a']);
 
+      expect(realpath).not.toHaveBeenCalled();
       expect(saveConfig).toHaveBeenCalledWith({ plugins: ['plugin-b'] });
       expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('successfully unregistered'));
+    });
+
+    it('should unregister a filesystem path plugin using realpath', async () => {
+      loadConfig.mockResolvedValue({ plugins: ['/resolved/plugins/plugin-a', 'plugin-b'] });
+      realpath.mockResolvedValue('/resolved/plugins/plugin-a');
+
+      await program.parseAsync(['node', 'test', 'plugin', 'unregister', './plugins/plugin-a']);
+
+      expect(realpath).toHaveBeenCalledWith('./plugins/plugin-a');
+      expect(saveConfig).toHaveBeenCalledWith({ plugins: ['plugin-b'] });
     });
 
     it('should warn if plugin not found', async () => {
