@@ -46,6 +46,7 @@ import { getActiveProfile } from '../lib/config.js';
 import { startMcpServer } from '../lib/mcp.js';
 import { PluginLoader } from '../lib/plugin-loader.js';
 import { eventBus, EVENTS } from '../lib/events.js';
+import { createClient } from '../lib/api/factory.js';
 
 // Connection commands are registered dynamically via registerCommands
 // But we need them registered early if we want them to show up in help even if config fails?
@@ -78,8 +79,8 @@ const appContext = {
     config: await loadConfig(), // Re-load or reuse config
     profile,
     eventBus,
-    EVENTS
-    // We can add a client factory or similar if needed
+    EVENTS,
+    createClient
 };
 
 const pluginLoader = new PluginLoader(appContext);

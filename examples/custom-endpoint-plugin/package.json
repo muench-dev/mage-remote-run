@@ -1,0 +1,10 @@
+{
+  "name": "mage-remote-run-plugin-custom-endpoint",
+  "version": "1.0.0",
+  "description": "Example plugin that calls a custom endpoint",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "chalk": "^5.0.0"
+  }
+}
