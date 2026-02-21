@@ -45,7 +45,7 @@ import {
 import { getActiveProfile } from '../lib/config.js';
 import { startMcpServer } from '../lib/mcp.js';
 import { PluginLoader } from '../lib/plugin-loader.js';
-import { eventBus, EVENTS } from '../lib/events.js';
+import { eventBus, events } from '../lib/events.js';
 import { createClient } from '../lib/api/factory.js';
 
 // Connection commands are registered dynamically via registerCommands
@@ -80,19 +80,19 @@ const appContext = {
     config: await loadConfig(), // Re-load or reuse config
     profile,
     eventBus,
-    EVENTS,
+    events,
     createClient
 };
 
 const pluginLoader = new PluginLoader(appContext);
 await pluginLoader.loadPlugins();
 
-eventBus.emit(EVENTS.INIT, appContext);
+eventBus.emit(events.INIT, appContext);
 
 registerCommands(program, profile);
 
 program.hook('preAction', async (thisCommand, actionCommand) => {
-  eventBus.emit(EVENTS.BEFORE_COMMAND, { thisCommand, actionCommand, profile });
+  eventBus.emit(events.BEFORE_COMMAND, { thisCommand, actionCommand, profile });
 
   // Check if we have an active profile and if format is not json/xml
   // Note: 'options' are available on the command that has them defined.
@@ -111,7 +111,7 @@ program.hook('preAction', async (thisCommand, actionCommand) => {
 });
 
 program.hook('postAction', async (thisCommand, actionCommand) => {
-    eventBus.emit(EVENTS.AFTER_COMMAND, { thisCommand, actionCommand, profile });
+    eventBus.emit(events.AFTER_COMMAND, { thisCommand, actionCommand, profile });
 });
 
 import { expandCommandAbbreviations } from '../lib/command-helper.js';

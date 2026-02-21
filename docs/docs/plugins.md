@@ -70,10 +70,10 @@ import chalk from 'chalk';
  * @param {Object} context.config - The user configuration object
  * @param {Object|null} context.profile - The active profile (if any)
  * @param {import('events').EventEmitter} context.eventBus - The application event bus
- * @param {Object} context.EVENTS - Event name constants
+* @param {Object} context.events - Event name constants
  */
 export default async function(context) {
-    const { program, eventBus, EVENTS } = context;
+    const { program, eventBus, events } = context;
 
     // 1. Register a new command
     program.command('hello')
@@ -84,7 +84,7 @@ export default async function(context) {
         });
 
     // 2. Hook into application events
-    eventBus.on(EVENTS.BEFORE_COMMAND, (data) => {
+    eventBus.on(events.BEFORE_COMMAND, (data) => {
         const { thisCommand, actionCommand, profile } = data;
         // Logic to execute before any command runs
         // e.g., Logging, validation, etc.
@@ -123,12 +123,12 @@ export default async function(context) {
 
 ### Available Events
 
-#### `EVENTS.INIT` (`init`)
+#### `events.INIT` (`init`)
 
 Triggered after plugins are loaded and before commands are fully processed.
-- **Payload**: The `appContext` object (`program`, `config`, `profile`, `eventBus`, `EVENTS`).
+- **Payload**: The `appContext` object (`program`, `config`, `profile`, `eventBus`, `events`).
 
-#### `EVENTS.BEFORE_COMMAND` (`beforeCommand`)
+#### `events.BEFORE_COMMAND` (`beforeCommand`)
 
 Triggered right before a command action is executed.
 
@@ -137,13 +137,13 @@ Triggered right before a command action is executed.
   - `actionCommand`: The specific command being executed (Commander internal).
   - `profile`: The active `mage-remote-run` profile object (or `null`).
 
-#### `EVENTS.AFTER_COMMAND` (`afterCommand`)
+#### `events.AFTER_COMMAND` (`afterCommand`)
 
 Triggered right after a command action has finished execution.
 
-- **Payload**: Same as `EVENTS.BEFORE_COMMAND`.
+- **Payload**: Same as `events.BEFORE_COMMAND`.
 
-#### `EVENTS.MCP_START` (`mcpStart`)
+#### `events.MCP_START` (`mcpStart`)
 
 Triggered when the MCP server initializes (but before it starts listening or connecting).
 

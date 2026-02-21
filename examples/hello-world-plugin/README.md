@@ -44,7 +44,7 @@ This is a minimal example plugin for `mage-remote-run` demonstrating how to exte
 
 ```javascript
 export default async function(context) {
-    const { program, eventBus, EVENTS } = context;
+    const { program, eventBus, events } = context;
 
     // 1. Register a new command using Commander.js
     program.command('hello')
@@ -55,7 +55,7 @@ export default async function(context) {
         });
 
     // 2. Listen to application events
-    eventBus.on(EVENTS.BEFORE_COMMAND, (data) => {
+    eventBus.on(events.BEFORE_COMMAND, (data) => {
         // Execute logic before any command runs
     });
 }
