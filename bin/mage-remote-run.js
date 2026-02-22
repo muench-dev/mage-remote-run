@@ -57,6 +57,7 @@ program.command('mcp [args...]')
   .option('--transport <type>', 'Transport type (stdio, http)', 'stdio')
   .option('--host <host>', 'HTTP Host', '127.0.0.1')
   .option('--port <port>', 'HTTP Port', '18098')
+  .option('--token <token>', 'Authentication token')
   .allowExcessArguments(true)
   .allowUnknownOption(true)
   .action(async (args, options) => {
