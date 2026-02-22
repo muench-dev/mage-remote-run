@@ -7,6 +7,8 @@ sidebar_position: 4
 
 Manage connection profiles for Magento instances. Profiles store system type, instance URL, and authentication settings. The active profile is used for all API commands.
 
+For configuration file locations and environment variables, see the [Configuration](../configuration.md) page.
+
 ## connection add
 
 Create a new profile. This command supports both interactive prompts and non-interactive flags for CI/CD pipelines.

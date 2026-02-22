@@ -23,6 +23,7 @@ const sidebars = {
     'intro',
     'installation',
     'usage-and-general-commands',
+    'configuration',
     'updates',
     'compatibility',
     'ci-integration',

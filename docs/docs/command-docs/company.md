@@ -59,6 +59,8 @@ mage-remote-run company show 1
 
 Create a new company. Interactive prompts will guide you.
 
+You can set `MAGE_REMOTE_RUN_DEFAULT_COUNTRY` (for example `DE` or `CA`) to prefill the default country code for the address prompt. If not set, `US` is used.
+
 ```bash
 mage-remote-run company create
 ```
