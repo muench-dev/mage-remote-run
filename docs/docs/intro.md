@@ -7,6 +7,8 @@ slug: /
 
 # Welcome to mage-remote-run
 
+<img src="/img/logo.svg" alt="mage-remote-run logo" width="220" />
+
 mage-remote-run is a Node.js CLI for working with Magento Open Source, Mage-OS, and Adobe Commerce via the REST API. It focuses on remote administration tasks like connection management, store data inspection, customers, orders, products, and tax classes.
 
 > Early stage: This tool is not yet stable and may change in breaking ways.
