@@ -4,6 +4,7 @@ export default {
     clearMocks: true,
     collectCoverage: true,
     coverageDirectory: 'coverage',
+    coveragePathIgnorePatterns: ['/examples/'],
     moduleFileExtensions: ['js', 'json'],
     testMatch: ['**/tests/**/*.test.js'],
     verbose: true
