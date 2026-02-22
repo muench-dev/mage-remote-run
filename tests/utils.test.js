@@ -174,22 +174,22 @@ describe('readInput', () => {
 });
 
 describe('validateAdobeCommerce', () => {
-    it('should not throw if profile type is allowed', async () => {
+    test.each(['ac-cloud-paas', 'ac-saas', 'ac-on-prem'])('should not throw if profile type is %s', async (type) => {
         configMod.loadConfig.mockResolvedValue({
             activeProfile: 'test',
             profiles: {
-                test: { type: 'ac-cloud-paas' }
+                test: { type }
             }
         });
 
         await expect(validateAdobeCommerce()).resolves.not.toThrow();
     });
 
-    it('should throw if profile type is not allowed', async () => {
+    test.each(['magento-os', 'unknown-type'])('should throw if profile type is %s', async (type) => {
         configMod.loadConfig.mockResolvedValue({
             activeProfile: 'test',
             profiles: {
-                test: { type: 'magento-os' }
+                test: { type }
             }
         });
 
@@ -207,23 +207,32 @@ describe('validateAdobeCommerce', () => {
 });
 
 describe('validatePaaSOrOnPrem', () => {
-    it('should not throw if profile type is allowed', async () => {
+    test.each(['ac-cloud-paas', 'ac-on-prem'])('should not throw if profile type is %s', async (type) => {
         configMod.loadConfig.mockResolvedValue({
             activeProfile: 'test',
             profiles: {
-                test: { type: 'ac-on-prem' }
+                test: { type }
             }
         });
 
         await expect(validatePaaSOrOnPrem()).resolves.not.toThrow();
     });
 
-    it('should throw if profile type is not allowed', async () => {
+    test.each(['ac-saas', 'magento-os', 'unknown-type'])('should throw if profile type is %s', async (type) => {
         configMod.loadConfig.mockResolvedValue({
             activeProfile: 'test',
             profiles: {
-                test: { type: 'ac-saas' }
+                test: { type }
             }
+        });
+
+        await expect(validatePaaSOrOnPrem()).rejects.toThrow('This command is only available for Adobe Commerce (Cloud/On-Premise).');
+    });
+
+    it('should throw if no active profile', async () => {
+        configMod.loadConfig.mockResolvedValue({
+            activeProfile: null,
+            profiles: {}
         });
 
         await expect(validatePaaSOrOnPrem()).rejects.toThrow('This command is only available for Adobe Commerce (Cloud/On-Premise).');
