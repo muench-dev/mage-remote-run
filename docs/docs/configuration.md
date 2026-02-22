@@ -8,6 +8,12 @@ sidebar_label: Configuration
 
 This page documents where `mage-remote-run` stores configuration data and which environment variables are read by the CLI.
 
+Initial configuration is created with the `connection add` command:
+
+```bash
+mage-remote-run connection add
+```
+
 ## Configuration Storage
 
 The CLI stores configuration (profiles, plugin registration, and preferences) and token cache data in system-specific locations:
