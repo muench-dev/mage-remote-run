@@ -104,8 +104,35 @@ describe('Company Commands', () => {
 
         await program.parseAsync(['node', 'test', 'company', 'create']);
 
+        // Verify default country is US by default
+        expect(inquirer.default.prompt).toHaveBeenNthCalledWith(2, expect.arrayContaining([
+            expect.objectContaining({ name: 'country_id', default: 'US' })
+        ]));
+
         expect(mockClient.post).toHaveBeenCalledWith('V1/company', expect.anything());
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Company created with ID: 100'));
+    });
+
+    it('create: should use default country from env', async () => {
+        process.env.MAGE_REMOTE_RUN_DEFAULT_COUNTRY = 'CA';
+        inquirer.default.prompt.mockResolvedValue({
+            company_name: 'New Co',
+            company_email: 'new@co.com',
+            email: 'admin@co.com',
+            street: 'Straight Rd',
+            city: 'Citadel'
+        });
+        mockClient.post.mockResolvedValue({ id: 101 });
+
+        await program.parseAsync(['node', 'test', 'company', 'create']);
+
+        // Verify inquirer was called with correct default country
+        // 1st call is basic info, 2nd call is address
+        expect(inquirer.default.prompt).toHaveBeenNthCalledWith(2, expect.arrayContaining([
+            expect.objectContaining({ name: 'country_id', default: 'CA' })
+        ]));
+
+        delete process.env.MAGE_REMOTE_RUN_DEFAULT_COUNTRY;
     });
 
     it('update: should update company details', async () => {
