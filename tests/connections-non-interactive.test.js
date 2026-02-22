@@ -138,6 +138,33 @@ describe('Connection Commands (Non-Interactive)', () => {
         }));
     });
 
+    it('should add a SaaS profile with custom IMS token URL', async () => {
+        configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: null });
+        const mockClient = { get: jest.fn().mockResolvedValue({}) };
+        factoryMod.createClient.mockResolvedValue(mockClient);
+
+        await program.parseAsync([
+            'node', 'test', 'connection', 'add',
+            '--name', 'MySaaSCustomIMS',
+            '--type', 'ac-saas',
+            '--url', 'https://saas.test',
+            '--client-id', 'my-id',
+            '--client-secret', 'my-secret',
+            '--token-url', 'https://custom-ims.test/token'
+        ]);
+
+        expect(configMod.addProfile).toHaveBeenCalledWith('MySaaSCustomIMS', expect.objectContaining({
+            type: 'ac-saas',
+            url: 'https://saas.test',
+            auth: {
+                clientId: 'my-id',
+                clientSecret: 'my-secret',
+                tokenUrl: 'https://custom-ims.test/token'
+            },
+            b2bModulesAvailable: true
+        }));
+    });
+
     it('should add a Bearer Token profile non-interactively', async () => {
         configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: 'Other' });
         const mockClient = { get: jest.fn().mockResolvedValue(['Magento_Catalog']) };
