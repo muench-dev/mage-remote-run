@@ -114,7 +114,7 @@ describe('Company Commands', () => {
     });
 
     it('create: should use default country from env', async () => {
-        process.env.MAGE_DEFAULT_COUNTRY = 'CA';
+        process.env.MAGE_REMOTE_RUN_DEFAULT_COUNTRY = 'CA';
         inquirer.default.prompt.mockResolvedValue({
             company_name: 'New Co',
             company_email: 'new@co.com',
@@ -132,7 +132,7 @@ describe('Company Commands', () => {
             expect.objectContaining({ name: 'country_id', default: 'CA' })
         ]));
 
-        delete process.env.MAGE_DEFAULT_COUNTRY;
+        delete process.env.MAGE_REMOTE_RUN_DEFAULT_COUNTRY;
     });
 
     it('update: should update company details', async () => {
