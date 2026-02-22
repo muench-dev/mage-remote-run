@@ -21,11 +21,30 @@ Start with HTTP transport (SSE):
 mage-remote-run mcp --transport http --host 127.0.0.1 --port 18098
 ```
 
+## Authentication
+
+Authentication is **mandatory** for the HTTP transport.
+
+The server generates a secure random token on startup if one is not provided. The token will be printed to the console.
+
+To specify a token manually:
+
+```bash
+mage-remote-run mcp --transport http --token secure-token-123
+```
+
+You can also set the `MAGE_REMOTE_RUN_MCP_TOKEN` environment variable.
+
+Clients must provide the token via:
+- **Query Parameter**: `?token=<token>` (Required for SSE connection)
+- **Authorization Header**: `Authorization: Bearer <token>` (For POST requests)
+
 ## Options
 
 - `--transport <type>`: `stdio` or `http` (default: `stdio`)
 - `--host <host>`: HTTP host (default: `127.0.0.1`)
 - `--port <port>`: HTTP port (default: `18098`)
+- `--token <token>`: Authentication token (HTTP only)
 
 ## Tool naming
 
