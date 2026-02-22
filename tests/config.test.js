@@ -1,6 +1,19 @@
 import { jest } from '@jest/globals';
 import path from 'path';
 
+// Helper to verify path handling
+const isDarwin = process.platform === 'darwin';
+
+// Define mock paths relative to current working directory to be safe
+const MOCK_HOME = path.resolve(process.cwd(), 'mock-home');
+const MOCK_CONFIG = path.resolve(process.cwd(), 'mock-config');
+const MOCK_CACHE = path.resolve(process.cwd(), 'mock-cache');
+
+const EXPECTED_CONFIG_DIR = isDarwin ? path.join(MOCK_HOME, '.config', 'mage-remote-run') : MOCK_CONFIG;
+const EXPECTED_CONFIG_FILE = path.join(EXPECTED_CONFIG_DIR, 'config.json');
+const EXPECTED_CACHE_DIR = MOCK_CACHE;
+const EXPECTED_TOKEN_CACHE_FILE = path.join(EXPECTED_CACHE_DIR, 'token-cache.json');
+
 // Define mocks
 jest.unstable_mockModule('fs', () => ({
     default: {
@@ -18,12 +31,12 @@ jest.unstable_mockModule('mkdirp', () => ({
 }));
 
 jest.unstable_mockModule('env-paths', () => ({
-    default: jest.fn(() => ({ config: '/mock/config', cache: '/mock/cache' }))
+    default: jest.fn(() => ({ config: MOCK_CONFIG, cache: MOCK_CACHE }))
 }));
 
 jest.unstable_mockModule('os', () => ({
     default: {
-        homedir: jest.fn(() => '/mock/home')
+        homedir: jest.fn(() => MOCK_HOME)
     }
 }));
 
@@ -35,13 +48,6 @@ const { mkdirp } = await import('mkdirp');
 describe('Config Management', () => {
     let consoleLogSpy;
     let consoleErrorSpy;
-
-    // Helper to verify path handling
-    const isDarwin = process.platform === 'darwin';
-    const EXPECTED_CONFIG_DIR = isDarwin ? '/mock/home/.config/mage-remote-run' : '/mock/config';
-    const EXPECTED_CONFIG_FILE = path.join(EXPECTED_CONFIG_DIR, 'config.json');
-    const EXPECTED_CACHE_DIR = '/mock/cache';
-    const EXPECTED_TOKEN_CACHE_FILE = path.join(EXPECTED_CACHE_DIR, 'token-cache.json');
 
     beforeEach(() => {
         jest.clearAllMocks();
