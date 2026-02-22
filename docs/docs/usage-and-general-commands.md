@@ -64,12 +64,6 @@ mage-remote-run customer show <id> --format json
 mage-remote-run order show <id-or-increment> --format xml
 ```
 
-## Configuration Storage
+## Configuration
 
-The CLI stores configuration (profiles) and cache data in system-specific default locations:
-
-| OS | Configuration Path (`config.json`) | Cache Path (`token-cache.json`) |
-|---|---|---|
-| **macOS** | `~/.config/mage-remote-run` | `~/Library/Caches/mage-remote-run` |
-| **Linux** | `~/.config/mage-remote-run` | `~/.cache/mage-remote-run` |
-| **Windows** | `%APPDATA%\mage-remote-run\Config` | `%LOCALAPPDATA%\mage-remote-run\Cache` |
+For configuration storage paths and environment variables, see the dedicated [Configuration](./configuration.md) page.
