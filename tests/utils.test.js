@@ -30,10 +30,34 @@ jest.unstable_mockModule('../lib/config.js', () => ({
     loadConfig: jest.fn()
 }));
 
-const { handleError, readInput, validateAdobeCommerce, validatePaaSOrOnPrem } = await import('../lib/utils.js');
+const { handleError, readInput, validateAdobeCommerce, validatePaaSOrOnPrem, printTable } = await import('../lib/utils.js');
 const fs = (await import('fs')).default;
 const os = (await import('os')).default;
 const configMod = await import('../lib/config.js');
+
+describe('printTable', () => {
+    let consoleLogSpy;
+
+    beforeEach(() => {
+        consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('should print a table with headers and data', () => {
+        const headers = ['ID', 'Name'];
+        const data = [['1', 'Test User'], ['2', 'Another User']];
+        printTable(headers, data);
+        expect(consoleLogSpy).toHaveBeenCalled();
+        const output = consoleLogSpy.mock.calls[0][0];
+        expect(output).toContain('ID');
+        expect(output).toContain('Name');
+        expect(output).toContain('Test User');
+        expect(output).toContain('Another User');
+    });
+});
 
 describe('handleError', () => {
     let consoleErrorSpy;
