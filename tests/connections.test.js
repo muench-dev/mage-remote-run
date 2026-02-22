@@ -368,7 +368,8 @@ describe('Connection Commands', () => {
 
             expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
             const tableInstance = Table.mock.results[0].value;
-            expect(tableInstance.push).toHaveBeenCalledWith(['Active Profile', expect.stringContaining('MyProfile')]);
+            expect(tableInstance.push).toHaveBeenCalled();
+            expect(tableInstance.push.mock.calls[0]).toContainEqual(['Active Profile', expect.stringContaining('MyProfile')]);
         });
 
         it('should show B2B module status for Adobe Commerce PaaS/On-Prem', async () => {
@@ -394,7 +395,8 @@ describe('Connection Commands', () => {
             expect(mockClient.get).toHaveBeenCalledWith('V1/modules');
             expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
             const tableInstance = Table.mock.results[0].value;
-            expect(tableInstance.push).toHaveBeenCalledWith(['B2B Modules', expect.stringContaining('Yes')]);
+            expect(tableInstance.push).toHaveBeenCalled();
+            expect(tableInstance.push.mock.calls[0]).toContainEqual(['B2B Modules', expect.stringContaining('Yes')]);
         });
 
         it('should show B2B modules as available for Adobe Commerce SaaS', async () => {
@@ -407,7 +409,8 @@ describe('Connection Commands', () => {
 
             expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
             const tableInstance = Table.mock.results[0].value;
-            expect(tableInstance.push).toHaveBeenCalledWith(['B2B Modules', expect.stringContaining('Yes')]);
+            expect(tableInstance.push).toHaveBeenCalled();
+            expect(tableInstance.push.mock.calls[0]).toContainEqual(['B2B Modules', expect.stringContaining('Yes')]);
         });
 
         it('should show Hyva status for Magento OS', async () => {
@@ -420,8 +423,9 @@ describe('Connection Commands', () => {
 
             expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
             const tableInstance = Table.mock.results[0].value;
-            expect(tableInstance.push).toHaveBeenCalledWith(['Hyvä Commerce', expect.stringContaining('Yes')]);
-            expect(tableInstance.push).toHaveBeenCalledWith(['Hyvä Theme', expect.stringContaining('Yes')]);
+            expect(tableInstance.push).toHaveBeenCalled();
+            expect(tableInstance.push.mock.calls[0]).toContainEqual(['Hyvä Commerce', expect.stringContaining('Yes')]);
+            expect(tableInstance.push.mock.calls[0]).toContainEqual(['Hyvä Theme', expect.stringContaining('Yes')]);
         });
 
         it('should output JSON when requested', async () => {
@@ -456,7 +460,8 @@ describe('Connection Commands', () => {
             expect(configMod.saveConfig).toHaveBeenCalledWith(expect.objectContaining({ activeProfile: 'New' }));
             expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
             const tableInstance = Table.mock.results[0].value;
-            expect(tableInstance.push).toHaveBeenCalledWith(['Active Profile', expect.stringContaining('New')]);
+            expect(tableInstance.push).toHaveBeenCalled();
+            expect(tableInstance.push.mock.calls[0]).toContainEqual(['Active Profile', expect.stringContaining('New')]);
         });
     });
 });

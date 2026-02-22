@@ -35,30 +35,6 @@ const fs = (await import('fs')).default;
 const os = (await import('os')).default;
 const configMod = await import('../lib/config.js');
 
-describe('printTable', () => {
-    let consoleLogSpy;
-
-    beforeEach(() => {
-        consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    });
-
-    afterEach(() => {
-        jest.clearAllMocks();
-    });
-
-    it('should print a table with headers and data', () => {
-        const headers = ['ID', 'Name'];
-        const data = [['1', 'Test User'], ['2', 'Another User']];
-        printTable(headers, data);
-        expect(consoleLogSpy).toHaveBeenCalled();
-        const output = consoleLogSpy.mock.calls[0][0];
-        expect(output).toContain('ID');
-        expect(output).toContain('Name');
-        expect(output).toContain('Test User');
-        expect(output).toContain('Another User');
-    });
-});
-
 describe('handleError', () => {
     let consoleErrorSpy;
 
@@ -251,5 +227,46 @@ describe('validatePaaSOrOnPrem', () => {
         });
 
         await expect(validatePaaSOrOnPrem()).rejects.toThrow('This command is only available for Adobe Commerce (Cloud/On-Premise).');
+    });
+});
+
+describe('printTable', () => {
+    let consoleLogSpy;
+
+    beforeEach(() => {
+        consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+    });
+
+    afterEach(() => {
+        consoleLogSpy.mockRestore();
+    });
+
+    it('should print a table with headers and data', () => {
+        const headers = ['ID', 'Name'];
+        const data = [['1', 'Alice'], ['2', 'Bob']];
+
+        printTable(headers, data);
+
+        expect(consoleLogSpy).toHaveBeenCalled();
+        const output = consoleLogSpy.mock.calls[0][0];
+        // Verify content
+        expect(output).toContain('ID');
+        expect(output).toContain('Name');
+        expect(output).toContain('1');
+        expect(output).toContain('Alice');
+        expect(output).toContain('2');
+        expect(output).toContain('Bob');
+    });
+
+    it('should handle empty data', () => {
+        const headers = ['ID', 'Name'];
+        const data = [];
+
+        printTable(headers, data);
+
+        expect(consoleLogSpy).toHaveBeenCalled();
+        const output = consoleLogSpy.mock.calls[0][0];
+        expect(output).toContain('ID');
+        expect(output).toContain('Name');
     });
 });
