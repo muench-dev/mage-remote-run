@@ -1,4 +1,4 @@
-# Mage Remote Run
+# mage-remote-run
 
 The remote swiss army knife for Magento Open Source, Mage-OS, Adobe Commerce
 
