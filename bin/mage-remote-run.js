@@ -58,6 +58,8 @@ program.command('mcp [args...]')
   .option('--host <host>', 'HTTP Host', '127.0.0.1')
   .option('--port <port>', 'HTTP Port', '18098')
   .option('--token <token>', 'Authentication token')
+  .option('--include <patterns>', 'Include command patterns/groups (default: "@safe")')
+  .option('--exclude <patterns>', 'Exclude command patterns/groups (exclusions win)')
   .allowExcessArguments(true)
   .allowUnknownOption(true)
   .action(async (args, options) => {

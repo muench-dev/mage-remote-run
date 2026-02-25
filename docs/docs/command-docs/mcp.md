@@ -45,6 +45,34 @@ Clients must provide the token via:
 - `--host <host>`: HTTP host (default: `127.0.0.1`)
 - `--port <port>`: HTTP port (default: `18098`)
 - `--token <token>`: Authentication token (HTTP only)
+- `--include <patterns>`: Include command patterns and groups (default: `@safe`)
+- `--exclude <patterns>`: Exclude command patterns and groups (exclude rules have priority)
+
+## Command filtering
+
+MCP tools are generated from CLI commands and can be filtered using command patterns:
+
+- Use `:` to separate command levels (example: `order:show`, `store:view:list`)
+- Use `*` as wildcard (example: `order:*`)
+- Use `@group` to reference a predefined command group (example: `@product`)
+- You can mix groups and patterns in one expression
+
+Example:
+
+```bash
+mage-remote-run mcp --include "@safe @connection order:*" --exclude "order:cancel"
+```
+
+`--exclude` always wins over `--include`.
+
+### Preconfigured groups
+
+- `@safe`: read-only command set (default)
+- `@risky` / `@all`: all commands
+- Domain groups: `@connection`, `@website`, `@store`, `@customer`, `@order`, `@product`, `@cart`, `@tax`, `@inventory`, `@shipment`, `@event`, `@webhook`, `@company`, `@po-cart`, `@import`, `@module`, `@plugin`, `@rest`, `@console`, `@eav`
+- Combined groups: `@sales`, `@catalog`, `@cloud`, `@commerce`
+
+Groups can include other groups.
 
 ## Tool naming
 
