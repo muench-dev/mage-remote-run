@@ -114,5 +114,51 @@ describe('MCP Server', () => {
                 }, 100);
             });
         }, 10000);
+
+        test('include/exclude filters tools with exclude priority', async () => {
+            activeCp = spawn('node', [
+                binPath,
+                'mcp',
+                '--transport',
+                'stdio',
+                '--include',
+                'order:*',
+                '--exclude',
+                'order:cancel'
+            ]);
+
+            let stdout = '';
+            activeCp.stdout.on('data', d => stdout += d.toString());
+
+            await waitFor(activeCp, 'Registered Tools:');
+
+            const req = {
+                jsonrpc: '2.0',
+                id: 2,
+                method: 'tools/list',
+                params: {}
+            };
+            activeCp.stdin.write(JSON.stringify(req) + '\n');
+
+            await new Promise((resolve, reject) => {
+                let checks = 0;
+                const interval = setInterval(() => {
+                    checks++;
+                    if (stdout.includes('"name":"order_list"')) {
+                        clearInterval(interval);
+                        try {
+                            expect(stdout).not.toContain('"name":"order_cancel"');
+                            resolve();
+                        } catch (error) {
+                            reject(error);
+                        }
+                    }
+                    if (checks > 20) {
+                        clearInterval(interval);
+                        reject(new Error(`Timeout waiting for tools/list response. Stdout: ${stdout}`));
+                    }
+                }, 100);
+            });
+        }, 10000);
     });
 });
