@@ -12,7 +12,13 @@ Manage orders.
 List orders with paging controls.
 
 ```bash
+mage-remote-run order list
 mage-remote-run order list --page 1 --size 20
+mage-remote-run order list --status pending
+mage-remote-run order list --email user@example.com
+mage-remote-run order list --date-from 2023-01-01 --date-to 2023-12-31
+mage-remote-run order list --fields "increment_id,grand_total,customer_email"
+mage-remote-run order list --filter "grand_total>=100" --add-fields "base_grand_total,billing_address.city"
 ```
 
 ### Options
@@ -20,6 +26,14 @@ mage-remote-run order list --page 1 --size 20
 - `-p, --page <number>`: Page number (default: 1)
 - `-s, --size <number>`: Page size (default: 20)
 - `-f, --format <type>`: Output format (text, json, xml) (default: text)
+- `--status <status>`: Filter by order status (e.g., pending, processing)
+- `--email <email>`: Filter by customer email address
+- `--store <store_id>`: Filter by store ID
+- `--date-from <date>`: Filter by creation date from (e.g., `2023-01-01`)
+- `--date-to <date>`: Filter by creation date to (e.g., `2023-12-31`)
+- `--filter <filters...>`: Generic filters. Supports operators `>`, `<`, `>=`, `<=`, and `=` (e.g., `grand_total>=100`, `status=pending`)
+- `--fields <fields>`: Comma-separated columns to display exclusively, overriding the defaults (`increment_id,status,etc.`). Supports nested attributes (e.g., `billing_address.city`).
+- `--add-fields <fields>`: Comma-separated columns to display alongside the default ones.
 
 ## order search `<query>`
 

@@ -63,6 +63,125 @@ describe('Order Commands', () => {
         jest.restoreAllMocks();
     });
 
+    it('list: should list orders with filters', async () => {
+        mockClient.get.mockResolvedValue({
+            items: [{ entity_id: 1, increment_id: '100000001', grand_total: 100, status: 'pending' }],
+            total_count: 1
+        });
+
+        await program.parseAsync([
+            'node', 'test', 'order', 'list',
+            '--status', 'pending',
+            '--email', 'test@example.com',
+            '--store', '1',
+            '--date-from', '2023-01-01',
+            '--date-to', '2023-12-31',
+            '--filter', 'grand_total=100',
+            '--filter', 'base_grand_total>500',
+            '--filter', 'total_paid<300',
+            '--filter', 'customer_group_id>=1',
+            '--filter', 'items_count<=5'
+        ]);
+
+        expect(mockClient.get).toHaveBeenCalledWith(
+            'V1/orders',
+            expect.objectContaining({
+                'searchCriteria[filter_groups][0][filters][0][field]': 'grand_total',
+                'searchCriteria[filter_groups][0][filters][0][value]': '100',
+                'searchCriteria[filter_groups][0][filters][0][condition_type]': 'eq',
+                'searchCriteria[filter_groups][1][filters][0][field]': 'base_grand_total',
+                'searchCriteria[filter_groups][1][filters][0][value]': '500',
+                'searchCriteria[filter_groups][1][filters][0][condition_type]': 'gt',
+                'searchCriteria[filter_groups][2][filters][0][field]': 'total_paid',
+                'searchCriteria[filter_groups][2][filters][0][value]': '300',
+                'searchCriteria[filter_groups][2][filters][0][condition_type]': 'lt',
+                'searchCriteria[filter_groups][3][filters][0][field]': 'customer_group_id',
+                'searchCriteria[filter_groups][3][filters][0][value]': '1',
+                'searchCriteria[filter_groups][3][filters][0][condition_type]': 'gteq',
+                'searchCriteria[filter_groups][4][filters][0][field]': 'items_count',
+                'searchCriteria[filter_groups][4][filters][0][value]': '5',
+                'searchCriteria[filter_groups][4][filters][0][condition_type]': 'lteq',
+                'searchCriteria[filter_groups][5][filters][0][field]': 'status',
+                'searchCriteria[filter_groups][5][filters][0][value]': 'pending',
+                'searchCriteria[filter_groups][5][filters][0][condition_type]': 'eq',
+                'searchCriteria[filter_groups][6][filters][0][field]': 'customer_email',
+                'searchCriteria[filter_groups][6][filters][0][value]': 'test@example.com',
+                'searchCriteria[filter_groups][7][filters][0][field]': 'store_id',
+                'searchCriteria[filter_groups][7][filters][0][value]': '1',
+                'searchCriteria[filter_groups][8][filters][0][field]': 'created_at',
+                'searchCriteria[filter_groups][8][filters][0][value]': '2023-01-01',
+                'searchCriteria[filter_groups][8][filters][0][condition_type]': 'gteq',
+                'searchCriteria[filter_groups][9][filters][0][field]': 'created_at',
+                'searchCriteria[filter_groups][9][filters][0][value]': '2023-12-31',
+                'searchCriteria[filter_groups][9][filters][0][condition_type]': 'lteq'
+            }),
+            expect.anything()
+        );
+        expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+    });
+
+    it('list: should display custom columns if --fields is provided (override defaults)', async () => {
+        mockClient.get.mockResolvedValue({
+            items: [
+                { entity_id: 1, increment_id: '100000001', status: 'pending', grand_total: 100, customer_email: 'test@example.com', base_grand_total: 80, billing_address: { city: 'Austin' } },
+                { entity_id: 2, increment_id: '100000002', status: 'processing', grand_total: 200, customer_email: 'user@example.com', base_grand_total: 150 }
+            ],
+            total_count: 2
+        });
+
+        await program.parseAsync([
+            'node', 'test', 'order', 'list',
+            '--fields', 'base_grand_total,billing_address.city'
+        ]);
+
+        const cliTableMock = (await import('cli-table3')).default;
+        expect(cliTableMock).toHaveBeenCalledWith({
+            style: { head: [] },
+            head: [
+                expect.anything(), // base_grand_total
+                expect.anything()  // billing_address.city
+            ]
+        });
+
+        const pushMock = cliTableMock.mock.results[0].value.push;
+        expect(pushMock).toHaveBeenCalledWith(
+            [80, 'Austin'],
+            [150, '']
+        );
+    });
+
+    it('list: should append custom columns if --add-fields is provided', async () => {
+        mockClient.get.mockResolvedValue({
+            items: [
+                { entity_id: 1, increment_id: '100000001', status: 'pending', grand_total: 100, customer_email: 'test@example.com', shipping_description: 'Flat Rate' }
+            ],
+            total_count: 1
+        });
+
+        await program.parseAsync([
+            'node', 'test', 'order', 'list',
+            '--add-fields', 'shipping_description'
+        ]);
+
+        const cliTableMock = (await import('cli-table3')).default;
+        expect(cliTableMock).toHaveBeenCalledWith({
+            style: { head: [] },
+            head: [
+                expect.anything(),
+                expect.anything(),
+                expect.anything(),
+                expect.anything(),
+                expect.anything(),
+                expect.anything() // shipping_description
+            ]
+        });
+
+        const pushMock = cliTableMock.mock.results[0].value.push;
+        expect(pushMock).toHaveBeenCalledWith(
+            [1, '100000001', 'pending', 100, 'test@example.com', 'Flat Rate']
+        );
+    });
+
     it('latest: should list latest orders', async () => {
         mockClient.get.mockResolvedValue({
             items: [{ entity_id: 1, increment_id: '100000001', grand_total: 100, status: 'pending', created_at: '2023-01-01' }]
