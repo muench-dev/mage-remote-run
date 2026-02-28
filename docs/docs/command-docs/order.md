@@ -34,6 +34,7 @@ mage-remote-run order list --filter "grand_total>=100" --add-fields "base_grand_
 - `--filter <filters...>`: Generic filters. Supports operators `>`, `<`, `>=`, `<=`, and `=` (e.g., `grand_total>=100`, `status=pending`)
 - `--fields <fields>`: Comma-separated columns to display exclusively, overriding the defaults (`increment_id,status,etc.`). Supports nested attributes (e.g., `billing_address.city`).
 - `--add-fields <fields>`: Comma-separated columns to display alongside the default ones.
+- `--sort <sorts...>`: Sort orders by field and direction (e.g., `grand_total:DESC`, `created_at:ASC`).
 
 ## order search `<query>`
 

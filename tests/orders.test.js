@@ -182,6 +182,27 @@ describe('Order Commands', () => {
         );
     });
 
+    it('list: should handle --sort options correctly', async () => {
+        mockClient.get.mockResolvedValue({ items: [], total_count: 0 });
+
+        await program.parseAsync([
+            'node', 'test', 'order', 'list',
+            '--sort', 'grand_total:DESC',
+            '--sort', 'created_at' // should default to ASC
+        ]);
+
+        expect(mockClient.get).toHaveBeenCalledWith(
+            'V1/orders',
+            expect.objectContaining({
+                'searchCriteria[sortOrders][0][field]': 'grand_total',
+                'searchCriteria[sortOrders][0][direction]': 'DESC',
+                'searchCriteria[sortOrders][1][field]': 'created_at',
+                'searchCriteria[sortOrders][1][direction]': 'ASC'
+            }),
+            expect.anything()
+        );
+    });
+
     it('latest: should list latest orders', async () => {
         mockClient.get.mockResolvedValue({
             items: [{ entity_id: 1, increment_id: '100000001', grand_total: 100, status: 'pending', created_at: '2023-01-01' }]
