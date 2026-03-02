@@ -74,6 +74,32 @@ describe('Product Commands', () => {
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
     });
 
+    it('list: should list products with filters', async () => {
+        mockClient.get.mockResolvedValue({
+            items: [{ id: 1, sku: 'TS123', name: 'Test Shirt', type_id: 'simple', price: 10 }],
+            total_count: 1
+        });
+
+        await program.parseAsync(['node', 'test', 'product', 'list', '--filter', 'type_id=simple', 'price>=10']);
+
+        const expectedParams = {
+            'searchCriteria[currentPage]': '1',
+            'searchCriteria[pageSize]': '20',
+            'searchCriteria[filter_groups][0][filters][0][field]': 'type_id',
+            'searchCriteria[filter_groups][0][filters][0][value]': 'simple',
+            'searchCriteria[filter_groups][0][filters][0][condition_type]': 'eq',
+            'searchCriteria[filter_groups][1][filters][0][field]': 'price',
+            'searchCriteria[filter_groups][1][filters][0][value]': '10',
+            'searchCriteria[filter_groups][1][filters][0][condition_type]': 'gteq',
+            'searchCriteria[sortOrders][0][field]': 'entity_id',
+            'searchCriteria[sortOrders][0][direction]': 'ASC'
+        };
+
+        expect(factoryMod.createClient).toHaveBeenCalled();
+        expect(mockClient.get).toHaveBeenCalledWith('V1/products', expectedParams, expect.any(Object));
+        expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+    });
+
     it('attribute list: should list attributes', async () => {
         mockClient.get.mockResolvedValue({
             items: [{ attribute_code: 'name', default_frontend_label: 'Name', is_required: true, is_user_defined: false }]
