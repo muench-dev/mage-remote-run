@@ -7,7 +7,12 @@ jest.unstable_mockModule('../lib/api/factory.js', () => ({
 
 jest.unstable_mockModule('../lib/utils.js', () => ({
     printTable: jest.fn(),
-    handleError: jest.fn()
+    handleError: jest.fn(),
+    buildPaginationCriteria: jest.fn().mockReturnValue({
+        'searchCriteria[currentPage]': '1',
+        'searchCriteria[pageSize]': '20'
+    }),
+    addPaginationOptions: jest.fn().mockImplementation(cmd => cmd)
 }));
 
 jest.unstable_mockModule('inquirer', () => ({
