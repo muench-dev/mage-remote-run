@@ -12,7 +12,19 @@ jest.unstable_mockModule('../lib/utils.js', () => ({
         'searchCriteria[currentPage]': '1',
         'searchCriteria[pageSize]': '20'
     }),
-    addPaginationOptions: jest.fn().mockImplementation(cmd => cmd)
+    addPaginationOptions: jest.fn().mockImplementation(cmd => cmd),
+    addFormatOption: jest.fn().mockImplementation(cmd => cmd.option('-f, --format <type>', 'Output format (text, json, xml)', 'text')),
+    getFormatHeaders: jest.fn().mockImplementation(options => {
+        const headers = {};
+        if (options.format === 'json') headers.Accept = 'application/json';
+        else if (options.format === 'xml') headers.Accept = 'application/xml';
+        return headers;
+    }),
+    formatOutput: jest.fn().mockImplementation((options, data) => {
+        if (options.format === 'json') { console.log(JSON.stringify(data, null, 2)); return true; }
+        if (options.format === 'xml') { console.log(data); return true; }
+        return false;
+    })
 }));
 
 jest.unstable_mockModule('inquirer', () => ({

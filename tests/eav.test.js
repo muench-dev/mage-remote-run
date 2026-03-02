@@ -66,6 +66,6 @@ describe('EAV Commands', () => {
 
         await program.parseAsync(['node', 'test', 'eav', 'attribute-set', 'show', '1']);
 
-        expect(mockClient.get).toHaveBeenCalledWith('V1/eav/attribute-sets/1');
+        expect(mockClient.get).toHaveBeenCalledWith('V1/eav/attribute-sets/1', {}, expect.anything());
     });
 });
