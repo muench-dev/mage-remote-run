@@ -39,9 +39,36 @@ Use this skill when adding generic filtering or sorting capabilities to any `lis
    ```
 
 3. **Multiple Filter/Sort Examples:** Always include multi-filter and sort usage examples in the `.addHelpText('after', ...)` block to show the user how to apply more than one condition simultaneously:
-   ```javascript
+   ```bash
    $ mage-remote-run [command] list --filter "status=pending" --filter "grand_total>100"
    $ mage-remote-run [command] list --sort "grand_total:DESC" --sort "created_at:ASC"
    ```
 
 4. **Testing:** In the test suite, ensure you are passing multiple filters and sorts as discrete strings in the `program.parseAsync` array format, e.g., `['--filter', 'status=pending', '--sort', 'id:DESC']` (note: Commander.js parses consecutive identifiers into an array). Tests should verify parameters are correctly appended to the API GET request params with their proper indexed keys.
+
+5. **Format Option Definition:** Define the format option using `addFormatOption(command)` from `lib/utils.js`. Ensure this is applied to any command that retrieves and outputs data.
+   ```javascript
+   import { addFormatOption } from '../utils.js';
+
+   const listCommand = myCommand.command('list')
+       // ... other options
+   
+   addFormatOption(listCommand);
+   ```
+
+6. **Format Logic:** Use `getFormatHeaders(options)` and `formatOutput(options, data)` inside actions.
+   ```javascript
+   import { getFormatHeaders, formatOutput } from '../utils.js';
+   
+   // ... inside your action handler:
+   const headers = getFormatHeaders(options);
+   
+   const data = await client.get('V1/endpoint', params, { headers });
+   
+   // This handles json and xml stdout logging and returns true if handled
+   if (formatOutput(options, data)) {
+       return;
+   }
+   
+   // standard text output below...
+   ```
