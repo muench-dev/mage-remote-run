@@ -30,7 +30,7 @@ jest.unstable_mockModule('../lib/config.js', () => ({
     loadConfig: jest.fn()
 }));
 
-const { handleError, readInput, validateAdobeCommerce, validatePaaSOrOnPrem, printTable } = await import('../lib/utils.js');
+const { handleError, readInput, validateAdobeCommerce, validatePaaSOrOnPrem, printTable, buildSearchCriteria } = await import('../lib/utils.js');
 const fs = (await import('fs')).default;
 const os = (await import('os')).default;
 const configMod = await import('../lib/config.js');
@@ -277,5 +277,70 @@ describe('printTable', () => {
         const output = consoleLogSpy.mock.calls[0][0];
         expect(output).toContain('ID');
         expect(output).toContain('Name');
+    });
+});
+
+describe('buildSearchCriteria', () => {
+    let originalConsoleError;
+
+    beforeEach(() => {
+        originalConsoleError = console.error;
+        console.error = jest.fn();
+    });
+
+    afterEach(() => {
+        console.error = originalConsoleError;
+    });
+
+    it('should build pagination criteria', () => {
+        const result = buildSearchCriteria({ page: 2, size: 50 });
+        expect(result.params).toMatchObject({
+            'searchCriteria[currentPage]': 2,
+            'searchCriteria[pageSize]': 50
+        });
+    });
+
+    it('should parse simple equality filter', () => {
+        const result = buildSearchCriteria({ filter: ['status=1'] });
+        expect(result.params).toMatchObject({
+            'searchCriteria[filter_groups][0][filters][0][field]': 'status',
+            'searchCriteria[filter_groups][0][filters][0][value]': '1',
+            'searchCriteria[filter_groups][0][filters][0][condition_type]': 'eq'
+        });
+    });
+
+    it('should parse shorthand operators', () => {
+        const result = buildSearchCriteria({ filter: ['price>=10'] });
+        expect(result.params).toMatchObject({
+            'searchCriteria[filter_groups][0][filters][0][field]': 'price',
+            'searchCriteria[filter_groups][0][filters][0][value]': '10',
+            'searchCriteria[filter_groups][0][filters][0][condition_type]': 'gteq'
+        });
+    });
+
+    it('should parse explicit operators', () => {
+        const result = buildSearchCriteria({ filter: ['status:in=1,2,3', 'name:notnull'] });
+        expect(result.params).toMatchObject({
+            'searchCriteria[filter_groups][0][filters][0][field]': 'status',
+            'searchCriteria[filter_groups][0][filters][0][value]': '1,2,3',
+            'searchCriteria[filter_groups][0][filters][0][condition_type]': 'in',
+            'searchCriteria[filter_groups][1][filters][0][field]': 'name',
+            'searchCriteria[filter_groups][1][filters][0][value]': '',
+            'searchCriteria[filter_groups][1][filters][0][condition_type]': 'notnull'
+        });
+    });
+
+    it('should map wildcard character to percent for like operator', () => {
+        const result = buildSearchCriteria({ filter: ['name:like=*test*'] });
+        expect(result.params).toMatchObject({
+            'searchCriteria[filter_groups][0][filters][0][field]': 'name',
+            'searchCriteria[filter_groups][0][filters][0][value]': '%test%',
+            'searchCriteria[filter_groups][0][filters][0][condition_type]': 'like'
+        });
+    });
+
+    it('should warn on invalid filter format', () => {
+        buildSearchCriteria({ filter: ['invalid_filter'] });
+        expect(console.error).toHaveBeenCalled();
     });
 });
