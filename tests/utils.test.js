@@ -339,6 +339,18 @@ describe('buildSearchCriteria', () => {
         });
     });
 
+    it('should parse OR filters within the same group using ||', () => {
+        const result = buildSearchCriteria({ filter: ['sku:like=DRONE-* || price>100'] });
+        expect(result.params).toMatchObject({
+            'searchCriteria[filter_groups][0][filters][0][field]': 'sku',
+            'searchCriteria[filter_groups][0][filters][0][value]': 'DRONE-%',
+            'searchCriteria[filter_groups][0][filters][0][condition_type]': 'like',
+            'searchCriteria[filter_groups][0][filters][1][field]': 'price',
+            'searchCriteria[filter_groups][0][filters][1][value]': '100',
+            'searchCriteria[filter_groups][0][filters][1][condition_type]': 'gt'
+        });
+    });
+
     it('should warn on invalid filter format', () => {
         buildSearchCriteria({ filter: ['invalid_filter'] });
         expect(console.error).toHaveBeenCalled();

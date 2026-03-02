@@ -47,3 +47,13 @@ You can provide multiple filters by specifying the `--filter` option multiple ti
 ```bash
 mage-remote-run order list --filter "status=pending" --filter "grand_total>100"
 ```
+
+## OR Filters
+
+To perform a logical OR, separate multiple filters with `||`. You can optionally include spaces around the separator. This will group them in a single `filter_groups` context:
+
+```bash
+mage-remote-run order list --filter "sku:like=DRONE-* || price>100"
+```
+
+In this example, orders containing a SKU starting with `DRONE-` OR having a price greater than 100 will be matched.
