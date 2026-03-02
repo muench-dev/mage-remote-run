@@ -202,7 +202,10 @@ describe('Company Commands', () => {
 
         await program.parseAsync(['node', 'test', 'company', 'role', 'list']);
 
-        expect(mockClient.get).toHaveBeenCalledWith('V1/company/role', { 'searchCriteria[pageSize]': 20 });
+        expect(mockClient.get).toHaveBeenCalledWith('V1/company/role', {
+            'searchCriteria[currentPage]': '1',
+            'searchCriteria[pageSize]': '20'
+        });
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
     });
 
@@ -274,8 +277,8 @@ describe('Company Commands', () => {
 
         expect(mockClient.get).toHaveBeenNthCalledWith(1, 'V1/companyCredits/company/1');
         expect(mockClient.get).toHaveBeenNthCalledWith(2, 'V1/companyCredits/history', expect.objectContaining({
-            'searchCriteria[filterGroups][0][filters][0][field]': 'company_credit_id',
-            'searchCriteria[filterGroups][0][filters][0][value]': 55
+            'searchCriteria[filter_groups][0][filters][0][field]': 'company_credit_id',
+            'searchCriteria[filter_groups][0][filters][0][value]': '55'
         }));
 
         // Assert that the table data preparation happened implicitly via MOCK_TABLE or similar if we could assert args

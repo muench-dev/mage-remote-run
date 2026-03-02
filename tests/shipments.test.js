@@ -12,6 +12,19 @@ jest.unstable_mockModule('../lib/utils.js', () => ({
         'searchCriteria[currentPage]': '1',
         'searchCriteria[pageSize]': '20'
     }),
+    buildSearchCriteria: jest.fn().mockImplementation((opts) => {
+        const params = {};
+        if (opts.filter && opts.filter.includes('order_id=123')) {
+            params['searchCriteria[filter_groups][0][filters][0][field]'] = 'order_id';
+            params['searchCriteria[filter_groups][0][filters][0][value]'] = '123';
+            params['searchCriteria[filter_groups][0][filters][0][condition_type]'] = 'eq';
+        }
+        return { params };
+    }),
+    buildSortCriteria: jest.fn().mockReturnValue({ params: {} }),
+    addPaginationOptions: jest.fn().mockImplementation(cmd => cmd),
+    addFilterOption: jest.fn().mockImplementation(cmd => cmd),
+    addSortOption: jest.fn().mockImplementation(cmd => cmd),
     addPaginationOptions: jest.fn().mockImplementation(cmd => cmd),
     addFormatOption: jest.fn().mockImplementation(cmd => cmd.option('-f, --format <type>', 'Output format (text, json, xml)', 'text')),
     getFormatHeaders: jest.fn().mockImplementation(options => {
