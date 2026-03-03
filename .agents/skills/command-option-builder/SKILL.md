@@ -44,9 +44,23 @@ Use this skill when adding generic filtering or sorting capabilities to any `lis
    $ mage-remote-run [command] list --sort "grand_total:DESC" --sort "created_at:ASC"
    ```
 
-4. **Testing:** In the test suite, ensure you are passing multiple filters and sorts as discrete strings in the `program.parseAsync` array format, e.g., `['--filter', 'status=pending', '--sort', 'id:DESC']` (note: Commander.js parses consecutive identifiers into an array). Tests should verify parameters are correctly appended to the API GET request params with their proper indexed keys.
+4. **Local Filtering (For non-SearchCriteria APIs):** Some APIs (like `V1/store/websites` or `V1/store/storeViews`) return flat JSON arrays and do not support Magento's standard `SearchCriteria` syntax. For these commands, define the options exactly as above, but apply them locally after fetching all data using `applyLocalSearchCriteria`:
 
-5. **Format Option Definition:** Define the format option using `addFormatOption(command)` from `lib/utils.js`. Ensure this is applied to any command that retrieves and outputs data.
+   ```javascript
+   import { applyLocalSearchCriteria } from '../utils.js';
+   
+   // ... inside your action handler:
+   const data = await client.get('V1/endpoint', null, { headers });
+   
+   // Apply the filter, sort, and pagination locally
+   let result = applyLocalSearchCriteria(data, options);
+   
+   // Proceed formatted output or mapping on `result` rather than `data`
+   ```
+
+5. **Testing:** In the test suite, ensure you are passing multiple filters and sorts as discrete strings in the `program.parseAsync` array format, e.g., `['--filter', 'status=pending', '--sort', 'id:DESC']` (note: Commander.js parses consecutive identifiers into an array). Tests should verify parameters are correctly appended to the API GET request params with their proper indexed keys.
+
+6. **Format Option Definition:** Define the format option using `addFormatOption(command)` from `lib/utils.js`. Ensure this is applied to any command that retrieves and outputs data.
    ```javascript
    import { addFormatOption } from '../utils.js';
 
@@ -56,7 +70,7 @@ Use this skill when adding generic filtering or sorting capabilities to any `lis
    addFormatOption(listCommand);
    ```
 
-6. **Format Logic:** Use `getFormatHeaders(options)` and `formatOutput(options, data)` inside actions.
+7. **Format Logic:** Use `getFormatHeaders(options)` and `formatOutput(options, data)` inside actions.
    ```javascript
    import { getFormatHeaders, formatOutput } from '../utils.js';
    
