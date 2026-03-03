@@ -53,7 +53,39 @@ mage-remote-run order list --filter "status=pending" --filter "grand_total>100"
 To perform a logical OR, separate multiple filters with `||`. You can optionally include spaces around the separator. This will group them in a single `filter_groups` context:
 
 ```bash
-mage-remote-run order list --filter "sku:like=DRONE-* || price>100"
+mage-remote-run product list --filter "sku:like=DRONE-* || price>100"
 ```
 
-In this example, orders containing a SKU starting with `DRONE-` OR having a price greater than 100 will be matched.
+In this example, products containing a SKU starting with `DRONE-` OR having a price greater than 100 will be matched.
+
+## Examples
+
+Here are some real-world examples of how filters can be used with various list commands:
+
+**Products**
+List simple products with a price greater than or equal to 100:
+```bash
+mage-remote-run product list --filter "type_id=simple" "price>=100"
+```
+
+**Orders**
+List pending orders with a grand total greater than 100:
+```bash
+mage-remote-run order list --filter "status=pending" --filter "grand_total>100"
+```
+Include additional columns while filtering:
+```bash
+mage-remote-run order list --filter "grand_total>=100" --add-fields "base_grand_total,billing_address.city"
+```
+
+**Customers**
+List customers by email domain and group ID:
+```bash
+mage-remote-run customer list --filter "email~*@example.com*" --filter "group_id=1"
+```
+
+**Customer Groups**
+Find customer groups by code:
+```bash
+mage-remote-run customer group list --filter "code~*VIP*"
+```
