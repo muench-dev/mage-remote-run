@@ -339,6 +339,44 @@ describe('buildSearchCriteria', () => {
         });
     });
 
+    it('should parse newly added shorthand operators', () => {
+        const result = buildSearchCriteria({
+            filter: [
+                'status!=canceled',
+                'name~*shirt*',
+                'name!~*shirt*',
+                'category_ids@@3',
+                'updated_at?',
+                'created_at!',
+                'entity_id:!in=1,2,3'
+            ]
+        });
+
+        expect(result.params).toMatchObject({
+            'searchCriteria[filter_groups][0][filters][0][field]': 'status',
+            'searchCriteria[filter_groups][0][filters][0][value]': 'canceled',
+            'searchCriteria[filter_groups][0][filters][0][condition_type]': 'neq',
+            'searchCriteria[filter_groups][1][filters][0][field]': 'name',
+            'searchCriteria[filter_groups][1][filters][0][value]': '%shirt%',
+            'searchCriteria[filter_groups][1][filters][0][condition_type]': 'like',
+            'searchCriteria[filter_groups][2][filters][0][field]': 'name',
+            'searchCriteria[filter_groups][2][filters][0][value]': '%shirt%',
+            'searchCriteria[filter_groups][2][filters][0][condition_type]': 'nlike',
+            'searchCriteria[filter_groups][3][filters][0][field]': 'category_ids',
+            'searchCriteria[filter_groups][3][filters][0][value]': '3',
+            'searchCriteria[filter_groups][3][filters][0][condition_type]': 'finset',
+            'searchCriteria[filter_groups][4][filters][0][field]': 'updated_at',
+            'searchCriteria[filter_groups][4][filters][0][value]': '1',
+            'searchCriteria[filter_groups][4][filters][0][condition_type]': 'null',
+            'searchCriteria[filter_groups][5][filters][0][field]': 'created_at',
+            'searchCriteria[filter_groups][5][filters][0][value]': '1',
+            'searchCriteria[filter_groups][5][filters][0][condition_type]': 'notnull',
+            'searchCriteria[filter_groups][6][filters][0][field]': 'entity_id',
+            'searchCriteria[filter_groups][6][filters][0][value]': '1,2,3',
+            'searchCriteria[filter_groups][6][filters][0][condition_type]': 'nin'
+        });
+    });
+
     it('should parse OR filters within the same group using ||', () => {
         const result = buildSearchCriteria({ filter: ['sku:like=DRONE-* || price>100'] });
         expect(result.params).toMatchObject({
