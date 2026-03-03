@@ -27,15 +27,15 @@ The following operators are supported:
 | `lt` | `<` | Less than | `--filter "price<50"` |
 | `gteq` | `>=` | Greater than or equal | `--filter "price>=100"` |
 | `lteq` | `<=` | Less than or equal | `--filter "price<=50"` |
-| `neq` | | Not equal | `--filter "status:neq=canceled"` |
+| `neq` | `!=` | Not equal | `--filter "status!=canceled"` |
 | `in` | | In a list of values (comma-separated) | `--filter "entity_id:in=1,2,3"` |
-| `nin` | | Not in a list of values | `--filter "entity_id:nin=1,2,3"` |
-| `like` | | Contains value. You can use `*` as a wildcard. | `--filter "name:like=*shirt*"` |
-| `nlike` | | Does not contain value. | `--filter "name:nlike=*shirt*"` |
-| `notnull`| | Is not null. | `--filter "created_at:notnull"` |
-| `null` | | Is null. | `--filter "updated_at:null"` |
+| `nin` | `:!in` | Not in a list of values | `--filter "entity_id:!in=1,2,3"` |
+| `like` | `~` | Contains value. You can use `*` as a wildcard. | `--filter "name~*shirt*"` |
+| `nlike` | `!~` | Does not contain value. | `--filter "name!~*shirt*"` |
+| `notnull`| `!` | Is not null. | `--filter "created_at!"` |
+| `null` | `?` | Is null. | `--filter "updated_at?"` |
 | `moreq` | | More or equal | `--filter "price:moreq=100"` |
-| `finset` | | A value within a set of values | `--filter "category_ids:finset=3"` |
+| `finset` | `@@` | A value within a set of values | `--filter "category_ids@@3"` |
 | `nfinset`| | A value that is not within a set of values | `--filter "category_ids:nfinset=3"` |
 | `from` | | The beginning of a range. Must be used with to. | `--filter "created_at:from=2024-01-01"` |
 | `to` | | The end of a range. Must be used with from. | `--filter "created_at:to=2024-12-31"` |
