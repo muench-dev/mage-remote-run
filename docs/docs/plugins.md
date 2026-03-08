@@ -121,6 +121,37 @@ export default async function(context) {
 }
 ```
 
+### Registering Commands for Specific Connection Types
+
+Plugins can also register commands only for selected connection types. This is useful when a command depends on APIs or features that are only available for certain profile types.
+
+```javascript
+const SUPPORTED_TYPES = new Set([
+  'ac-cloud-paas',
+  'magento-os',
+  'mage-os',
+  'ac-on-prem',
+]);
+
+export default async function plugin(context) {
+  const { program, profile, createClient } = context;
+
+  if (!profile || !SUPPORTED_TYPES.has(profile.type)) {
+    return;
+  }
+
+  // ... plugin code
+}
+```
+
+Available connection types:
+
+- `magento-os`
+- `mage-os`
+- `ac-on-prem`
+- `ac-cloud-paas`
+- `ac-saas`
+
 ### Available Events
 
 #### `events.INIT` (`init`)
