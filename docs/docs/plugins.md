@@ -70,7 +70,7 @@ import chalk from 'chalk';
  * @param {Object} context.config - The user configuration object
  * @param {Object|null} context.profile - The active profile (if any)
  * @param {import('events').EventEmitter} context.eventBus - The application event bus
-* @param {Object} context.events - Event name constants
+ * @param {Object} context.events - Event name constants
  */
 export default async function(context) {
     const { program, eventBus, events } = context;
