@@ -61,7 +61,7 @@ describe('MCP Server', () => {
 
         test('http transport starts and listens on port', async () => {
             const port = 18099;
-            activeCp = spawn('node', [binPath, 'mcp', '--transport', 'http', '--port', port.toString()]);
+            activeCp = spawn('node', [binPath, 'mcp', '--transport', 'http', '--port', port.toString(), '--token', 'test-token']);
 
             // Wait for "Registered Tools:" which is the last log message
             try {
