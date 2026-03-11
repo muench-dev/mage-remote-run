@@ -237,7 +237,7 @@ describe('Console Command', () => {
         test('should handle command execution errors', async () => {
             const options = await getReplOptions();
             const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
-            const parseSpy = jest.spyOn(localProgramCapture, 'parseAsync').mockRejectedValue(new Error('Test error'));
+            jest.spyOn(localProgramCapture, 'parseAsync').mockRejectedValue(new Error('Test error'));
 
             await runEval(options, 'connection list');
 
