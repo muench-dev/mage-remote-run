@@ -1,5 +1,4 @@
 import { jest } from '@jest/globals';
-import path from 'path';
 
 // Mock global-dirs
 jest.unstable_mockModule('global-dirs', () => ({
