@@ -62,7 +62,7 @@ describe('Purchase Order Cart Commands', () => {
 
         await program.parseAsync(['node', 'test', 'po-cart', 'totals', 'mycart']);
 
-        expect(mockClient.get).toHaveBeenCalledWith('V1/purchase-order-carts/mycart/totals');
+        expect(mockClient.get).toHaveBeenCalledWith('V1/purchase-order-carts/mycart/totals', {}, expect.anything());
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Grand Total: 100 USD'));
     });
@@ -74,7 +74,7 @@ describe('Purchase Order Cart Commands', () => {
 
         await program.parseAsync(['node', 'test', 'po-cart', 'shipping-methods', 'mycart', '--address-id', '123']);
 
-        expect(mockClient.post).toHaveBeenCalledWith('V1/purchase-order-carts/mycart/estimate-shipping-methods-by-address-id', { addressId: '123' });
+        expect(mockClient.post).toHaveBeenCalledWith('V1/purchase-order-carts/mycart/estimate-shipping-methods-by-address-id', { addressId: '123' }, expect.anything());
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
     });
 
@@ -86,7 +86,7 @@ describe('Purchase Order Cart Commands', () => {
 
         await program.parseAsync(['node', 'test', 'po-cart', 'payment-info', 'mycart']);
 
-        expect(mockClient.get).toHaveBeenCalledWith('V1/purchase-order-carts/mycart/payment-information');
+        expect(mockClient.get).toHaveBeenCalledWith('V1/purchase-order-carts/mycart/payment-information', {}, expect.anything());
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Check / Money Order (checkmo)'));
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Grand Total: 110 USD'));
     });

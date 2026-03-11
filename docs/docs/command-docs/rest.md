@@ -20,8 +20,12 @@ mage-remote-run rest [path] [options]
 - `-m, --method <method>`: HTTP Method (GET, POST, PUT, DELETE)
 - `-d, --data <data>`: Request body data (JSON)
 - `-q, --query <string>`: Query parameters (e.g. "a=1&b=2")
-- `--page-size <number>`: Search Criteria Page Size
-- `--current-page <number>`: Search Criteria Current Page
+- `-s, --size <number>`: Search Criteria Page Size
+- `--page-size <number>`: Search Criteria Page Size (alias for --size)
+- `-p, --page <number>`: Search Criteria Current Page
+- `--current-page <number>`: Search Criteria Current Page (alias for --page)
+- `--filter <filters...>`: Generic filters (e.g. status=pending)
+- `--sort <sorts...>`: Sort orders by field and direction (e.g. sku:DESC, created_at:ASC)
 - `-c, --content-type <type>`: Content-Type (default: application/json)
 - `-f, --format <type>`: Output format (json, xml)
 
@@ -54,7 +58,12 @@ mage-remote-run rest V1/products -q "searchCriteria[pageSize]=10&fields=items[sk
 
 **Pagination Shortcuts**
 ```bash
-mage-remote-run rest V1/products --page-size 10 --current-page 1
+mage-remote-run rest V1/products --page 1 --size 10
+```
+
+**Sorting and Filtering**
+```bash
+mage-remote-run rest V1/products --filter status=pending grand_total>100 --sort created_at:DESC
 ```
 
 **Output Format**

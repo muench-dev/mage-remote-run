@@ -15,7 +15,19 @@ jest.unstable_mockModule('../lib/api/factory.js', () => ({
 }));
 jest.unstable_mockModule('../lib/utils.js', () => ({
     printTable: jest.fn(),
-    handleError: jest.fn()
+    handleError: jest.fn(),
+    addFormatOption: jest.fn().mockImplementation(cmd => cmd.option('-f, --format <type>', 'Output format (text, json, xml)', 'text')),
+    getFormatHeaders: jest.fn().mockImplementation(options => {
+        const headers = {};
+        if (options.format === 'json') headers.Accept = 'application/json';
+        else if (options.format === 'xml') headers.Accept = 'application/xml';
+        return headers;
+    }),
+    formatOutput: jest.fn().mockImplementation((options, data) => {
+        if (options.format === 'json') { console.log(JSON.stringify(data, null, 2)); return true; }
+        if (options.format === 'xml') { console.log(data); return true; }
+        return false;
+    })
 }));
 jest.unstable_mockModule('chalk', () => ({
     default: {
