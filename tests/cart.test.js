@@ -69,7 +69,7 @@ describe('Cart Commands', () => {
     it('list: should support filters', async () => {
         mockClient.get.mockResolvedValue({ items: [], total_count: 0 });
 
-        await program.parseAsync(['node', 'test', 'cart', 'list', '--filter', 'is_active:1']);
+        await program.parseAsync(['node', 'test', 'cart', 'list', '--filter', 'is_active=1']);
 
         expect(mockClient.get).toHaveBeenCalledWith('V1/carts/search', expect.objectContaining({
             'searchCriteria[filter_groups][0][filters][0][field]': 'is_active',

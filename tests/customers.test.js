@@ -145,7 +145,7 @@ describe('Customers Commands', () => {
 
         await program.parseAsync(['node', 'test', 'customer', 'group', 'list']);
 
-        expect(mockClient.get).toHaveBeenCalledWith('V1/customerGroups/search', expect.anything());
+        expect(mockClient.get).toHaveBeenCalledWith('V1/customerGroups/search', expect.anything(), expect.any(Object));
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
     });
 });

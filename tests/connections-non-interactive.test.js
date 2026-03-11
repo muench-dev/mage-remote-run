@@ -45,7 +45,19 @@ jest.unstable_mockModule('chalk', () => ({
 
 jest.unstable_mockModule('../lib/utils.js', () => ({
     printTable: jest.fn(),
-    handleError: jest.fn()
+    handleError: jest.fn(),
+    addFormatOption: jest.fn().mockImplementation(cmd => cmd.option('-f, --format <type>', 'Output format (text, json, xml)', 'text')),
+    getFormatHeaders: jest.fn().mockImplementation(options => {
+        const headers = {};
+        if (options.format === 'json') headers.Accept = 'application/json';
+        else if (options.format === 'xml') headers.Accept = 'application/xml';
+        return headers;
+    }),
+    formatOutput: jest.fn().mockImplementation((options, data) => {
+        if (options.format === 'json') { console.log(JSON.stringify(data, null, 2)); return true; }
+        if (options.format === 'xml') { console.log(data); return true; }
+        return false;
+    })
 }));
 
 // Dynamic imports are needed after unstable_mockModule
@@ -95,7 +107,7 @@ describe('Connection Commands (Non-Interactive)', () => {
 
         expect(promptsMod.askForProfileSettings).not.toHaveBeenCalled();
         expect(inquirerPrompts.input).not.toHaveBeenCalled();
-        
+
         // Verify client creation for testing
         expect(factoryMod.createClient).toHaveBeenCalledWith(expect.objectContaining({
             type: 'ac-saas',
@@ -257,7 +269,7 @@ describe('Connection Commands (Non-Interactive)', () => {
         // We catch the error manually because commander exitOverride might not be enough depending on implementation
         // But here we rely on the implementation throwing an error or console.error + process.exit
         // Since we are mocking everything, let's assume our implementation will throw an Error for validation
-        
+
         await program.parseAsync([
             'node', 'test', 'connection', 'add',
             '--name', 'BadSaaS',
@@ -270,7 +282,7 @@ describe('Connection Commands (Non-Interactive)', () => {
     });
 
     it('should fail if required Bearer params are missing', async () => {
-         await program.parseAsync([
+        await program.parseAsync([
             'node', 'test', 'connection', 'add',
             '--name', 'BadBearer',
             '--type', 'magento-os',
@@ -282,12 +294,12 @@ describe('Connection Commands (Non-Interactive)', () => {
     });
 
     it('should fail if connection test fails', async () => {
-         configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: 'Other' });
-         factoryMod.createClient.mockResolvedValue({
-             get: jest.fn().mockRejectedValue(new Error('Connection Refused'))
-         });
+        configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: 'Other' });
+        factoryMod.createClient.mockResolvedValue({
+            get: jest.fn().mockRejectedValue(new Error('Connection Refused'))
+        });
 
-         await program.parseAsync([
+        await program.parseAsync([
             'node', 'test', 'connection', 'add',
             '--name', 'FailTest',
             '--type', 'magento-os',
