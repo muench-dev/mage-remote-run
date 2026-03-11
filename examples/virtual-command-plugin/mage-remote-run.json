@@ -1,5 +1,5 @@
 {
-  "$schema": "https://mage-remote-run.muench.dev/mage-remote-run.schema.json",
+  "$schema": "https://mage-remote-run.muench.dev/config.schema.json",
   "commands": [
     {
       "name": "example virtual get-country",
@@ -8,6 +8,12 @@
       "description": "Fetch detailed information for a specific country by its ID",
       "summary": "GET /V1/directory/countries/:countryId",
       "supports_filters": false,
+      "connection_types": [
+        "magento-os",
+        "mage-os",
+        "ac-on-prem",
+        "ac-cloud-paas"
+      ],
       "options": {
         "storeId": {
           "type": "string",
@@ -29,6 +35,12 @@
       "description": "Fetch detailed information for all countries",
       "summary": "GET /V1/directory/countries",
       "supports_filters": true,
+      "connection_types": [
+        "magento-os",
+        "mage-os",
+        "ac-on-prem",
+        "ac-cloud-paas"
+      ],
       "options": {
         "storeId": {
           "type": "string",

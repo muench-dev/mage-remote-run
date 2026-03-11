@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://mage-remote-run.muench.dev/mage-remote-run.schema.json",
+  "$id": "https://mage-remote-run.muench.dev/config.schema.json",
   "title": "mage-remote-run Configuration",
   "type": "object",
   "properties": {

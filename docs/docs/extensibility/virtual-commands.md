@@ -15,6 +15,7 @@ Add entries to the `commands` array in your `config.json`:
 
 ```json
 {
+  "$schema": "https://mage-remote-run.muench.dev/config.schema.json",
   "commands": [
     {
       "name": "product get",

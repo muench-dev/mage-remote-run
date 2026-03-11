@@ -62,6 +62,7 @@ Example `mage-remote-run.json`:
 
 ```json
 {
+  "$schema": "https://mage-remote-run.muench.dev/config.schema.json",
   "commands": [
     {
       "name": "mycompany check",
