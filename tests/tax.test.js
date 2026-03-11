@@ -14,7 +14,9 @@ jest.unstable_mockModule('chalk', () => ({
         yellow: (t) => t,
         gray: (t) => t,
         cyan: (t) => t,
-        bold: (t) => t,
+        bold: Object.assign((t) => t, {
+            blue: (t) => t
+        }),
         magenta: (t) => t,
     }
 }));
@@ -50,13 +52,80 @@ describe('Tax Commands', () => {
         jest.restoreAllMocks();
     });
 
-    it('class list: should list tax classes', async () => {
-        mockClient.get.mockResolvedValue({
-            items: [{ class_id: 1, class_name: 'Retail Customer', class_type: 'CUSTOMER' }]
+    describe('tax class list', () => {
+        it('should list tax classes', async () => {
+            mockClient.get.mockResolvedValue({
+                items: [{ class_id: 1, class_name: 'Retail Customer', class_type: 'CUSTOMER' }],
+                total_count: 1
+            });
+
+            await program.parseAsync(['node', 'test', 'tax', 'class', 'list']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Total: 1'));
         });
 
-        await program.parseAsync(['node', 'test', 'tax', 'class', 'list']);
+        it('should handle format JSON output', async () => {
+            const mockData = { items: [{ class_id: 1 }] };
+            mockClient.get.mockResolvedValue(mockData);
 
-        expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+            await program.parseAsync(['node', 'test', 'tax', 'class', 'list', '--format', 'json']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(JSON.stringify(mockData, null, 2));
+        });
+
+        it('should output empty table when items is null', async () => {
+            mockClient.get.mockResolvedValue({ total_count: 0 });
+
+            await program.parseAsync(['node', 'test', 'tax', 'class', 'list']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+        });
+
+        it('should handle errors', async () => {
+            const error = new Error('API Error');
+            mockClient.get.mockRejectedValue(error);
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+            await program.parseAsync(['node', 'test', 'tax', 'class', 'list']);
+
+            expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', 'API Error');
+        });
+    });
+
+    describe('tax class show', () => {
+        it('should show tax class details', async () => {
+            mockClient.get.mockResolvedValue({
+                class_id: 2,
+                class_name: 'Taxable Goods',
+                class_type: 'PRODUCT'
+            });
+
+            await program.parseAsync(['node', 'test', 'tax', 'class', 'show', '2']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Tax Class Details:'));
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('2'));
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Taxable Goods'));
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('PRODUCT'));
+        });
+
+        it('should handle format JSON output', async () => {
+            const mockData = { class_id: 2, class_name: 'Taxable Goods' };
+            mockClient.get.mockResolvedValue(mockData);
+
+            await program.parseAsync(['node', 'test', 'tax', 'class', 'show', '2', '--format', 'json']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(JSON.stringify(mockData, null, 2));
+        });
+
+        it('should handle errors', async () => {
+            const error = new Error('API Error');
+            mockClient.get.mockRejectedValue(error);
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+            await program.parseAsync(['node', 'test', 'tax', 'class', 'show', '2']);
+
+            expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', 'API Error');
+        });
     });
 });
