@@ -28,7 +28,17 @@ const sidebars = {
     'updates',
     'compatibility',
     'ci-integration',
-    'plugins',
+    {
+      type: 'category',
+      label: 'Extensibility',
+      link: { type: 'doc', id: 'extensibility/index' },
+      items: [
+        'extensibility/plugins',
+        'extensibility/plugin-development',
+        'extensibility/plugin-configuration',
+        'extensibility/virtual-commands',
+      ],
+    },
     {
       type: 'category',
       label: 'Command Docs',

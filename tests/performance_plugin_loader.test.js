@@ -46,6 +46,8 @@ const { loadConfig } = await import('../lib/config.js');
 
 describe('PluginLoader Performance', () => {
     let context;
+    let consoleErrorSpy;
+    let consoleWarnSpy;
 
     beforeEach(() => {
         context = {
@@ -54,6 +56,13 @@ describe('PluginLoader Performance', () => {
             events: {}
         };
         jest.clearAllMocks();
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        consoleErrorSpy.mockRestore();
+        consoleWarnSpy.mockRestore();
     });
 
     it('benchmarks global plugin resolution', async () => {
@@ -68,6 +77,7 @@ describe('PluginLoader Performance', () => {
 
         // Setup fs mocks to simulate global yarn plugins
         fs.promises.access.mockImplementation((p) => {
+            if (p.endsWith('mage-remote-run.json')) return Promise.reject(new Error('ENOENT'));
             if (p.includes('/mock/npm/node_modules')) return Promise.reject(new Error('ENOENT'));
             if (p.includes('/mock/yarn/node_modules')) return Promise.resolve();
             return Promise.reject(new Error('ENOENT'));
