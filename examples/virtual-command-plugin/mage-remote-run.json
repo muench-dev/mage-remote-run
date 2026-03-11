@@ -1,4 +1,5 @@
 {
+  "$schema": "https://mage-remote-run.muench.dev/mage-remote-run.schema.json",
   "commands": [
     {
       "name": "example virtual get-country",

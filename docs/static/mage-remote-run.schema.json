@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mage-remote-run.muench.dev/mage-remote-run.schema.json",
+  "title": "mage-remote-run Configuration",
+  "type": "object",
+  "properties": {
+    "profiles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["ac-saas", "saas", "magento-os", "mage-os", "ac-on-prem", "ac-cloud-paas", "paas"]
+          },
+          "url": { "type": "string" },
+          "consumerKey": { "type": "string" },
+          "consumerSecret": { "type": "string" },
+          "accessToken": { "type": "string" },
+          "accessTokenSecret": { "type": "string" },
+          "clientId": { "type": "string" },
+          "clientSecret": { "type": "string" },
+          "environmentId": { "type": "string" }
+        },
+        "required": ["type", "url"]
+      }
+    },
+    "activeProfile": {
+      "type": "string"
+    },
+    "plugins": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The command name, including namespaces separated by spaces (e.g. 'myplugin get-something')."
+          },
+          "method": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+            "description": "The HTTP method for the endpoint."
+          },
+          "endpoint": {
+            "type": "string",
+            "description": "The API endpoint path, e.g. '/V1/products/:sku'."
+          },
+          "description": {
+            "type": "string",
+            "description": "The description for the command."
+          },
+          "summary": {
+            "type": "string",
+            "description": "A short summary for the command."
+          },
+          "supports_filters": {
+            "type": "boolean",
+            "description": "Whether the command supports generic list filters and sorting (default: true).",
+            "default": true
+          },
+          "connection_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Constrain the command to specific connection types."
+          },
+          "filters": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Predefined filters to apply (e.g. 'name:like=${firstLetter}*')."
+          },
+          "filter": {
+            "type": ["array", "string"],
+            "items": {
+              "type": "string"
+            },
+            "description": "Alias for filters."
+          },
+          "options": {
+            "$ref": "#/definitions/commandInputs"
+          },
+          "option": {
+            "$ref": "#/definitions/commandInputs"
+          },
+          "parameters": {
+            "$ref": "#/definitions/commandInputs"
+          },
+          "parameter": {
+            "$ref": "#/definitions/commandInputs"
+          }
+        },
+        "required": ["name", "method", "endpoint"]
+      }
+    }
+  },
+  "definitions": {
+    "commandInputs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["string", "boolean"],
+            "default": "string"
+          },
+          "required": {
+            "type": "boolean",
+            "default": false
+          },
+          "default": {},
+          "description": {
+            "type": "string"
+          },
+          "flags": {
+            "type": "string",
+            "description": "Explicit flags string (e.g. '-s, --storeId <value>'). If provided, overrides short/long."
+          },
+          "short": {
+            "type": "string",
+            "description": "Short flag (e.g. 's' or '-s')."
+          },
+          "long": {
+            "type": "string",
+            "description": "Long flag (e.g. 'storeId' or '--storeId')."
+          },
+          "argName": {
+            "type": "string",
+            "description": "The argument name to display in the help text."
+          },
+          "variadic": {
+            "type": "boolean",
+            "description": "Whether the argument takes multiple values.",
+            "default": false
+          }
+        }
+      }
+    }
+  }
+}
