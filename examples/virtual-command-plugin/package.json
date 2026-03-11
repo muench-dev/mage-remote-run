@@ -1,0 +1,7 @@
+{
+  "name": "mage-remote-run-plugin-virtual-command",
+  "version": "1.0.0",
+  "description": "Example plugin demonstrating how to register virtual REST commands dynamically.",
+  "main": "index.js",
+  "type": "module"
+}
