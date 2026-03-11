@@ -82,6 +82,76 @@ describe('Stores Commands', () => {
 
             expect(consoleLogSpy).toHaveBeenCalledWith(JSON.stringify(mockData, null, 2));
         });
+
+        it('should search store groups', async () => {
+            mockClient.get.mockResolvedValue([
+                { id: 1, code: 'main', name: 'Main Store', website_id: 1, root_category_id: 2 },
+                { id: 2, code: 'test', name: 'Test Store', website_id: 1, root_category_id: 2 }
+            ]);
+
+            await program.parseAsync(['node', 'test', 'store', 'group', 'search', 'main']);
+
+            expect(mockClient.get).toHaveBeenCalledWith('V1/store/storeGroups');
+            expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+        });
+
+        it('should delete store group when confirmed', async () => {
+            inquirer.default.prompt.mockResolvedValue({ confirm: true });
+
+            await program.parseAsync(['node', 'test', 'store', 'group', 'delete', '1']);
+
+            expect(mockClient.delete).toHaveBeenCalledWith('V1/store/storeGroups/1');
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('deleted'));
+        });
+
+        it('should not delete store group when not confirmed', async () => {
+            inquirer.default.prompt.mockResolvedValue({ confirm: false });
+
+            await program.parseAsync(['node', 'test', 'store', 'group', 'delete', '1']);
+
+            expect(mockClient.delete).not.toHaveBeenCalled();
+        });
+
+        it('should edit store group', async () => {
+            mockClient.get.mockResolvedValue([
+                { id: 1, code: 'main', name: 'Main Store', website_id: 1, root_category_id: 2 }
+            ]);
+            inquirer.default.prompt.mockResolvedValue({ name: 'New Name', code: 'new_code', website_id: 2 });
+
+            await program.parseAsync(['node', 'test', 'store', 'group', 'edit', '1']);
+
+            expect(mockClient.put).toHaveBeenCalledWith('V1/store/storeGroups/1', {
+                group: { id: 1, name: 'New Name', code: 'new_code', website_id: 2 }
+            });
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('updated'));
+        });
+
+        it('should fail to edit missing store group', async () => {
+            mockClient.get.mockResolvedValue([]);
+
+            await program.parseAsync(['node', 'test', 'store', 'group', 'edit', '1']);
+
+            expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', 'Store 1 not found');
+        });
+
+        it('should handle list errors', async () => {
+            mockClient.get.mockRejectedValue(new Error('API Error'));
+            await program.parseAsync(['node', 'test', 'store', 'group', 'list']);
+            expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', 'API Error');
+        });
+
+        it('should handle search errors', async () => {
+            mockClient.get.mockRejectedValue(new Error('API Error'));
+            await program.parseAsync(['node', 'test', 'store', 'group', 'search', 'main']);
+            expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', 'API Error');
+        });
+
+        it('should handle delete errors', async () => {
+            inquirer.default.prompt.mockResolvedValue({ confirm: true });
+            mockClient.delete.mockRejectedValue(new Error('API Error'));
+            await program.parseAsync(['node', 'test', 'store', 'group', 'delete', '1']);
+            expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', 'API Error');
+        });
     });
 
     describe('store view list', () => {
@@ -104,9 +174,84 @@ describe('Stores Commands', () => {
 
             expect(consoleLogSpy).toHaveBeenCalledWith(JSON.stringify(mockData, null, 2));
         });
+
+        it('should search store views', async () => {
+            mockClient.get.mockResolvedValue([
+                { id: 1, code: 'default', name: 'Default Store View', store_group_id: 1, is_active: 1 },
+                { id: 2, code: 'test', name: 'Test Store View', store_group_id: 1, is_active: 1 }
+            ]);
+
+            await program.parseAsync(['node', 'test', 'store', 'view', 'search', 'default']);
+
+            expect(mockClient.get).toHaveBeenCalledWith('V1/store/storeViews');
+            expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+        });
+
+        it('should delete store view when confirmed', async () => {
+            inquirer.default.prompt.mockResolvedValue({ confirm: true });
+
+            await program.parseAsync(['node', 'test', 'store', 'view', 'delete', '1']);
+
+            expect(mockClient.delete).toHaveBeenCalledWith('V1/store/storeViews/1');
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('deleted'));
+        });
+
+        it('should not delete store view when not confirmed', async () => {
+            inquirer.default.prompt.mockResolvedValue({ confirm: false });
+
+            await program.parseAsync(['node', 'test', 'store', 'view', 'delete', '1']);
+
+            expect(mockClient.delete).not.toHaveBeenCalled();
+        });
+
+        it('should edit store view', async () => {
+            mockClient.get.mockResolvedValue([
+                { id: 1, code: 'default', name: 'Default Store View', store_group_id: 1, is_active: 1 }
+            ]);
+            inquirer.default.prompt.mockResolvedValue({ name: 'New View Name', code: 'new_view_code', is_active: 0 });
+
+            await program.parseAsync(['node', 'test', 'store', 'view', 'edit', '1']);
+
+            expect(mockClient.put).toHaveBeenCalledWith('V1/store/storeViews/1', {
+                store: { id: 1, name: 'New View Name', code: 'new_view_code', is_active: 0 }
+            });
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('updated'));
+        });
+
+        it('should fail to edit missing store view', async () => {
+            mockClient.get.mockResolvedValue([]);
+
+            await program.parseAsync(['node', 'test', 'store', 'view', 'edit', '1']);
+
+            expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', 'View 1 not found');
+        });
+
+        it('should handle list errors', async () => {
+            mockClient.get.mockRejectedValue(new Error('API Error'));
+            await program.parseAsync(['node', 'test', 'store', 'view', 'list']);
+            expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', 'API Error');
+        });
+
+        it('should handle search errors', async () => {
+            mockClient.get.mockRejectedValue(new Error('API Error'));
+            await program.parseAsync(['node', 'test', 'store', 'view', 'search', 'main']);
+            expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', 'API Error');
+        });
+
+        it('should handle delete errors', async () => {
+            inquirer.default.prompt.mockResolvedValue({ confirm: true });
+            mockClient.delete.mockRejectedValue(new Error('API Error'));
+            await program.parseAsync(['node', 'test', 'store', 'view', 'delete', '1']);
+            expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', 'API Error');
+        });
     });
 
     describe('store config list', () => {
+        it('should handle list errors', async () => {
+            mockClient.get.mockRejectedValue(new Error('API Error'));
+            await program.parseAsync(['node', 'test', 'store', 'config', 'list']);
+            expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', 'API Error');
+        });
         it('should list store configs', async () => {
             mockClient.get.mockResolvedValue([
                 {
