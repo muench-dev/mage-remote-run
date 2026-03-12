@@ -66,7 +66,12 @@ describe('Config Management', () => {
 
             const config = await configMod.loadConfig();
 
-            expect(config).toEqual({ profiles: {}, activeProfile: null, plugins: [] });
+            expect(config).toEqual({
+                $schema: 'https://mage-remote-run.muench.dev/config.schema.json',
+                profiles: {},
+                activeProfile: null,
+                plugins: []
+            });
             expect(fs.existsSync).toHaveBeenCalledWith(EXPECTED_CONFIG_FILE);
         });
 
