@@ -13,6 +13,8 @@ jest.unstable_mockModule('../lib/config.js', () => ({
 const { PluginLoader } = await import('../lib/plugin-loader.js');
 const { loadConfig } = await import('../lib/config.js');
 const { events } = await import('../lib/events.js');
+const utils = await import('../lib/utils.js');
+const commandHelper = await import('../lib/command-helper.js');
 
 describe('PluginLoader', () => {
     let context;
@@ -29,7 +31,7 @@ describe('PluginLoader', () => {
         eventBus = {
             on: jest.fn()
         };
-        context = { program, eventBus, events };
+        context = { program, eventBus, events, lib: { utils, commandHelper, config: { loadConfig } } };
         jest.clearAllMocks();
     });
 

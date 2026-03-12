@@ -1,16 +1,22 @@
-import chalk from "chalk";
-
 export default async function (context) {
-  const { program, eventBus, events } = context;
+  const { program, eventBus, events, lib } = context;
+  const { addFormatOption, formatOutput } = lib.utils;
 
   // Register a new command
-  program
+  const cmd = program
     .command("hello")
     .description("Say hello from a plugin")
-    .option("-n, --name <name>", "Name to greet", "World")
-    .action((options) => {
-      console.log(chalk.green(`Hello ${options.name} from the plugin!`));
-    });
+    .option("-n, --name <name>", "Name to greet", "World");
+
+  addFormatOption(cmd);
+
+  cmd.action((options) => {
+    const payload = { message: `Hello ${options.name} from the plugin!` };
+
+    if (!formatOutput(options, payload)) {
+      console.log(payload.message);
+    }
+  });
 
   // Hook into an event
   eventBus.on(events.BEFORE_COMMAND, (data) => {
@@ -18,9 +24,7 @@ export default async function (context) {
     // We can log something if debug is on
     if (process.env.DEBUG) {
       console.log(
-        chalk.gray(
-          `[Plugin Hello] Hooked beforeCommand: ${data.actionCommand.name()}`,
-        ),
+        `[Plugin Hello] Hooked beforeCommand: ${data.actionCommand.name()}`,
       );
     }
   });
@@ -28,22 +32,20 @@ export default async function (context) {
   eventBus.on(events.AFTER_COMMAND, (data) => {
     if (process.env.DEBUG) {
       console.log(
-        chalk.gray(
-          `[Plugin Hello] Hooked afterCommand: ${data.actionCommand.name()}`,
-        ),
+        `[Plugin Hello] Hooked afterCommand: ${data.actionCommand.name()}`,
       );
     }
   });
 
   eventBus.on(events.INIT, () => {
     if (process.env.DEBUG) {
-      console.log(chalk.gray(`[Plugin Hello] Hooked init`));
+      console.log(`[Plugin Hello] Hooked init`);
     }
   });
 
   eventBus.on(events.MCP_START, () => {
     if (process.env.DEBUG) {
-      console.log(chalk.gray(`[Plugin Hello] Hooked mcpStart`));
+      console.log(`[Plugin Hello] Hooked mcpStart`);
     }
   });
 }

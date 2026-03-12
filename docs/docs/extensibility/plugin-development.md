@@ -144,3 +144,82 @@ Tool discovery and execution use isolated contexts:
 - Global events such as `MCP_START` are emitted on the main process event bus.
 
 For configuration injection patterns, see [Plugin Configuration](./plugin-configuration.md).
+
+## Using Built-in Library Utilities
+
+`appContext.lib` gives plugins access to the same internal utilities the CLI commands use — without needing to know the package install path or pin a version.
+
+### Available Sub-modules
+
+| Sub-module | Description |
+|---|---|
+| `lib.utils` | Output helpers, search/filter builders, pagination |
+| `lib.commandHelper` | Command abbreviation resolution |
+| `lib.config` | `loadConfig` / `saveConfig` functions |
+
+### `lib.utils` Reference
+
+| Export | Description |
+|---|---|
+| `printTable(headers, rows)` | Renders a colored CLI table |
+| `handleError(error)` | Formats and prints Magento API errors |
+| `buildSearchCriteria(options)` | Converts `--filter` / pagination options to Magento search params |
+| `buildSortCriteria(options)` | Converts `--sort` options to Magento sort params |
+| `addFilterOption(command)` | Adds `--filter` option to a commander command |
+| `addSortOption(command)` | Adds `--sort`, `--sort-by`, `--sort-order` options |
+| `addPaginationOptions(command)` | Adds `-p, --page` and `-s, --size` options |
+| `addFormatOption(command)` | Adds `-f, --format` option |
+| `formatOutput(options, data)` | Prints JSON/XML output; returns `true` if handled |
+| `applyLocalSearchCriteria(data, options)` | Filters/sorts/paginates a local array |
+
+### Example: Using `lib.utils` in a Plugin
+
+```javascript
+export default async function plugin(context) {
+  const { program, createClient, lib } = context;
+  const { printTable, handleError, addFilterOption, addPaginationOptions, buildSearchCriteria } = lib.utils;
+
+  const cmd = program
+    .command('my-items')
+    .description('List items from a custom endpoint');
+
+  addFilterOption(cmd);
+  addPaginationOptions(cmd);
+
+  cmd.action(async (options) => {
+    try {
+      const client = await createClient();
+      const { params } = buildSearchCriteria(options);
+      const result = await client.get('V1/my-items', { params });
+
+      const items = result.items ?? [];
+      if (items.length === 0) {
+        console.log('No items found.');
+        return;
+      }
+
+      printTable(['ID', 'Name', 'Status'], items.map(i => [i.id, i.name, i.status]));
+    } catch (error) {
+      handleError(error);
+    }
+  });
+}
+```
+
+### Example: Persisting Plugin Config
+
+```javascript
+export default async function plugin(context) {
+  const { program, lib } = context;
+  const { loadConfig, saveConfig } = lib.config;
+
+  program
+    .command('my-plugin-config')
+    .description('Show or reset plugin config')
+    .action(async () => {
+      const config = await loadConfig();
+      console.log('Current config:', JSON.stringify(config['my-plugin'] ?? {}, null, 2));
+    });
+}
+```
+
