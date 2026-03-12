@@ -47,6 +47,8 @@ import { startMcpServer } from '../lib/mcp.js';
 import { PluginLoader } from '../lib/plugin-loader.js';
 import { eventBus, events } from '../lib/events.js';
 import { createClient } from '../lib/api/factory.js';
+import * as utils from '../lib/utils.js';
+import * as commandHelper from '../lib/command-helper.js';
 
 // Connection commands are registered dynamically via registerCommands
 // But we need them registered early if we want them to show up in help even if config fails?
@@ -84,7 +86,12 @@ const appContext = {
   profile,
   eventBus,
   events,
-  createClient
+  createClient,
+  lib: {
+    utils,
+    commandHelper,
+    config: { loadConfig, saveConfig },
+  },
 };
 
 const pluginLoader = new PluginLoader(appContext);
