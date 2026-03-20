@@ -3,5 +3,8 @@
   "version": "1.0.0",
   "description": "Example plugin demonstrating how to register virtual REST commands dynamically.",
   "main": "index.js",
-  "type": "module"
+  "type": "module",
+  "peerDependencies": {
+    "mage-remote-run": "^1.5.0"
+  }
 }
