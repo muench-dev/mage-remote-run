@@ -463,5 +463,275 @@ describe('Connection Commands', () => {
             expect(tableInstance.push).toHaveBeenCalled();
             expect(tableInstance.push.mock.calls[0]).toContainEqual(['Active Profile', expect.stringContaining('New')]);
         });
+
+        it('should show message when no profiles exist', async () => {
+            configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: null });
+
+            await program.parseAsync(['node', 'test', 'connection', 'select']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No profiles found'));
+        });
+    });
+
+    describe('connection clear-token-cache', () => {
+        it('should clear token cache', async () => {
+            configMod.clearTokenCache.mockResolvedValue(undefined);
+
+            await program.parseAsync(['node', 'test', 'connection', 'clear-token-cache']);
+
+            expect(configMod.clearTokenCache).toHaveBeenCalled();
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Token cache cleared'));
+        });
+
+        it('should handle errors', async () => {
+            configMod.clearTokenCache.mockRejectedValue(new Error('Clear failed'));
+
+            await program.parseAsync(['node', 'test', 'connection', 'clear-token-cache']);
+
+            expect(consoleErrorSpy).toHaveBeenCalled();
+        });
+    });
+
+    describe('connection status-header', () => {
+        it('should enable the status header', async () => {
+            configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: null });
+
+            await program.parseAsync(['node', 'test', 'connection', 'status-header', 'on']);
+
+            expect(configMod.saveConfig).toHaveBeenCalledWith(expect.objectContaining({ showActiveConnectionHeader: true }));
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('enabled'));
+        });
+
+        it('should disable the status header', async () => {
+            configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: null });
+
+            await program.parseAsync(['node', 'test', 'connection', 'status-header', 'off']);
+
+            expect(configMod.saveConfig).toHaveBeenCalledWith(expect.objectContaining({ showActiveConnectionHeader: false }));
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('disabled'));
+        });
+
+        it('should reject invalid state', async () => {
+            await program.parseAsync(['node', 'test', 'connection', 'status-header', 'maybe']);
+
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid state'));
+            expect(configMod.saveConfig).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('connection status - edge cases', () => {
+        it('should output JSON when no active profile is set', async () => {
+            configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: null });
+
+            await program.parseAsync(['node', 'test', 'connection', 'status', '--format', 'json']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(JSON.stringify({ error: 'No active profile configured' }));
+        });
+
+        it('should show message when no active profile in text format', async () => {
+            configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: null });
+
+            await program.parseAsync(['node', 'test', 'connection', 'status']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No active profile configured'));
+        });
+
+        it('should show error when active profile is missing from config', async () => {
+            configMod.loadConfig.mockResolvedValue({
+                profiles: {},
+                activeProfile: 'Ghost'
+            });
+
+            await program.parseAsync(['node', 'test', 'connection', 'status']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Profile not found'));
+        });
+    });
+
+    describe('connection test - edge cases', () => {
+        it('should show message when no profiles exist for --all', async () => {
+            configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: null });
+
+            await program.parseAsync(['node', 'test', 'connection', 'test', '--all']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No profiles found'));
+        });
+
+        it('should handle no active profile without --all flag', async () => {
+            configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: null });
+
+            await program.parseAsync(['node', 'test', 'connection', 'test']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No active profile configured'));
+        });
+
+        it('should handle outer catch errors', async () => {
+            configMod.loadConfig.mockRejectedValue(new Error('Config load failed'));
+
+            await program.parseAsync(['node', 'test', 'connection', 'test']);
+
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Test failed'), 'Config load failed');
+        });
+
+        it('should handle failed connection in --all mode', async () => {
+            configMod.loadConfig.mockResolvedValue({
+                profiles: { 'P1': { type: 'saas' } },
+                activeProfile: 'P1'
+            });
+            factoryMod.createClient.mockRejectedValue(new Error('Connection refused'));
+
+            await program.parseAsync(['node', 'test', 'connection', 'test', '--all']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+        });
+    });
+
+    describe('connection edit', () => {
+        it('should edit a named profile', async () => {
+            configMod.loadConfig.mockResolvedValue({
+                profiles: { 'MyProfile': { type: 'saas', url: 'http://test.com' } },
+                activeProfile: 'MyProfile'
+            });
+            promptsMod.askForProfileSettings.mockResolvedValue({ type: 'saas', url: 'http://updated.com' });
+            inquirerPrompts.confirm.mockResolvedValueOnce(false); // skip test
+            configMod.saveConfig.mockResolvedValue(undefined);
+
+            await program.parseAsync(['node', 'test', 'connection', 'edit', 'MyProfile']);
+
+            expect(configMod.saveConfig).toHaveBeenCalledWith(expect.objectContaining({
+                profiles: expect.objectContaining({
+                    'MyProfile': expect.objectContaining({ url: 'http://updated.com' })
+                })
+            }));
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('updated'));
+        });
+
+        it('should prompt for profile when no name given', async () => {
+            configMod.loadConfig.mockResolvedValue({
+                profiles: { 'P1': { type: 'saas', url: 'http://test.com' } },
+                activeProfile: 'P1'
+            });
+            select.mockResolvedValue('P1');
+            promptsMod.askForProfileSettings.mockResolvedValue({ type: 'saas', url: 'http://updated.com' });
+            inquirerPrompts.confirm.mockResolvedValueOnce(false);
+            configMod.saveConfig.mockResolvedValue(undefined);
+
+            await program.parseAsync(['node', 'test', 'connection', 'edit']);
+
+            expect(select).toHaveBeenCalled();
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('updated'));
+        });
+
+        it('should cancel edit when no profiles exist', async () => {
+            configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: null });
+
+            await program.parseAsync(['node', 'test', 'connection', 'edit']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No profiles found'));
+        });
+
+        it('should handle cancelled edit via settings=null', async () => {
+            configMod.loadConfig.mockResolvedValue({
+                profiles: { 'P1': { type: 'saas', url: 'http://test.com' } },
+                activeProfile: 'P1'
+            });
+            promptsMod.askForProfileSettings.mockResolvedValue({ type: 'saas', url: 'http://test.com' });
+            // connection fails, user doesn't want to edit, doesn't want to save
+            inquirerPrompts.confirm
+                .mockResolvedValueOnce(true)  // test connection
+                .mockResolvedValueOnce(false) // don't edit settings
+                .mockResolvedValueOnce(false); // don't save anyway
+            factoryMod.createClient.mockRejectedValue(new Error('Failed'));
+
+            await program.parseAsync(['node', 'test', 'connection', 'edit', 'P1']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Edit cancelled'));
+        });
+    });
+
+    describe('connection add - interactive test flow', () => {
+        it('should handle successful connection test and save profile', async () => {
+            inquirerPrompts.input.mockResolvedValue('NewProfile');
+            promptsMod.askForProfileSettings.mockResolvedValue({ type: 'saas', url: 'http://test.com' });
+            configMod.loadConfig.mockResolvedValue({ profiles: {}, activeProfile: null });
+
+            const mockClient = { get: jest.fn().mockResolvedValue({}) };
+            factoryMod.createClient.mockResolvedValue(mockClient);
+
+            inquirerPrompts.confirm
+                .mockResolvedValueOnce(true);  // test connection -> succeeds, loop ends
+
+            await program.parseAsync(['node', 'test', 'connection', 'add']);
+
+            expect(mockClient.get).toHaveBeenCalledWith('V1/store/storeViews');
+            expect(configMod.addProfile).toHaveBeenCalledWith('NewProfile', expect.anything());
+        });
+
+        it('should handle ExitPromptError by cancelling', async () => {
+            const exitError = new Error('User aborted');
+            exitError.name = 'ExitPromptError';
+            inquirerPrompts.input.mockRejectedValue(exitError);
+
+            await program.parseAsync(['node', 'test', 'connection', 'add']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('cancelled'));
+        });
+    });
+
+    describe('connection list - error handling', () => {
+        it('should handle list errors', async () => {
+            configMod.loadConfig.mockRejectedValue(new Error('Load failed'));
+
+            await program.parseAsync(['node', 'test', 'connection', 'list']);
+
+            expect(consoleErrorSpy).toHaveBeenCalled();
+        });
+
+        it('should handle terminal width when connections are wide', async () => {
+            // Set a narrow terminal width to trigger truncation
+            const originalColumns = process.stdout.columns;
+            Object.defineProperty(process.stdout, 'columns', { value: 60, configurable: true });
+
+            configMod.loadConfig.mockResolvedValue({
+                profiles: {
+                    'very-long-profile-name-here': {
+                        type: 'ac-cloud-paas',
+                        url: 'https://very-long-url-that-would-be-truncated.example.com',
+                        b2bModulesAvailable: true,
+                        hyvaCommerceAvailable: false,
+                        hyvaThemeAvailable: false
+                    }
+                },
+                activeProfile: 'very-long-profile-name-here'
+            });
+
+            await program.parseAsync(['node', 'test', 'connection', 'list']);
+
+            expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+
+            Object.defineProperty(process.stdout, 'columns', { value: originalColumns, configurable: true });
+        });
+    });
+
+    describe('connection list - legacy field migration', () => {
+        it('should migrate hyvaModulesAvailable field and persist updated config', async () => {
+            configMod.loadConfig.mockResolvedValue({
+                profiles: {
+                    'Hyva': { type: 'magento-os', url: 'http://hyva.test', hyvaModulesAvailable: true }
+                },
+                activeProfile: 'Hyva'
+            });
+
+            const mockClient = { get: jest.fn().mockResolvedValue(['Magento_Store', 'Hyva_Commerce']) };
+            factoryMod.createClient.mockResolvedValue(mockClient);
+
+            await program.parseAsync(['node', 'test', 'connection', 'list']);
+
+            // saveConfig should be called since profile was updated (migration + module detection)
+            expect(configMod.saveConfig).toHaveBeenCalled();
+            // hyvaCommerceAvailable should be set (migrated from hyvaModulesAvailable and then re-evaluated)
+            const savedConfig = configMod.saveConfig.mock.calls[0][0];
+            expect(savedConfig.profiles.Hyva).not.toHaveProperty('hyvaModulesAvailable');
+        });
     });
 });

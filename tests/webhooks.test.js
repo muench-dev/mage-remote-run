@@ -401,5 +401,173 @@ describe('Webhook Commands', () => {
             expect(confirm).toHaveBeenCalled();
             expect(mockClient.post).toHaveBeenCalledWith('V1/webhooks/unsubscribe', { webhook: mockData[0] });
         });
+
+        it('should show "No webhooks found" when list is empty', async () => {
+            mockClient.get.mockResolvedValue([]);
+
+            await program.parseAsync(['node', 'test', 'webhook', 'delete']);
+
+            expect(console.log).toHaveBeenCalledWith(expect.stringContaining('No webhooks found'));
+            expect(mockClient.post).not.toHaveBeenCalled();
+        });
+
+        it('should cancel delete when user declines confirmation', async () => {
+            const mockData = [{ hook_name: 'Keep Me', webhook_type: 'type' }];
+            mockClient.get.mockResolvedValue(mockData);
+            confirm.mockResolvedValue(false);
+
+            await program.parseAsync(['node', 'test', 'webhook', 'delete', 'Keep Me']);
+
+            expect(mockClient.post).not.toHaveBeenCalled();
+        });
+
+        it('should handle ExitPromptError during delete', async () => {
+            const mockData = [{ hook_name: 'Hook', webhook_type: 'type' }];
+            mockClient.get.mockResolvedValue(mockData);
+            const exitError = new Error('User exited');
+            exitError.name = 'ExitPromptError';
+            confirm.mockRejectedValue(exitError);
+
+            await program.parseAsync(['node', 'test', 'webhook', 'delete', 'Hook']);
+
+            expect(handleError).not.toHaveBeenCalled();
+        });
+
+        it('should handle generic errors during delete', async () => {
+            const mockData = [{ hook_name: 'Hook', webhook_type: 'type' }];
+            mockClient.get.mockResolvedValue(mockData);
+            confirm.mockResolvedValue(true);
+            mockClient.post.mockRejectedValue(new Error('Delete failed'));
+
+            await program.parseAsync(['node', 'test', 'webhook', 'delete', 'Hook']);
+
+            expect(handleError).toHaveBeenCalled();
+        });
+    });
+
+    describe('webhook list additional cases', () => {
+        it('should handle errors', async () => {
+            mockClient.get.mockRejectedValue(new Error('List failed'));
+
+            await program.parseAsync(['node', 'test', 'webhook', 'list']);
+
+            expect(handleError).toHaveBeenCalled();
+        });
+    });
+
+    describe('webhook supported-list additional cases', () => {
+        it('should handle errors', async () => {
+            mockClient.get.mockRejectedValue(new Error('Supported list failed'));
+
+            await program.parseAsync(['node', 'test', 'webhook', 'supported-list']);
+
+            expect(handleError).toHaveBeenCalled();
+        });
+    });
+
+    describe('webhook show additional cases', () => {
+        it('should show "No webhooks found" when list is empty', async () => {
+            mockClient.get.mockResolvedValue([]);
+
+            await program.parseAsync(['node', 'test', 'webhook', 'show']);
+
+            expect(console.log).toHaveBeenCalledWith(expect.stringContaining('No webhooks found'));
+        });
+
+        it('should output json format', async () => {
+            const mockData = [{ hook_name: 'Test Hook', webhook_type: 'after', url: 'http://url', method: 'POST' }];
+            mockClient.get.mockResolvedValue(mockData);
+
+            await program.parseAsync(['node', 'test', 'webhook', 'show', 'Test Hook', '--format', 'json']);
+
+            expect(console.log).toHaveBeenCalledWith(JSON.stringify(mockData[0], null, 2));
+        });
+
+        it('should handle ExitPromptError during interactive selection', async () => {
+            mockClient.get.mockResolvedValue([{ hook_name: 'Hook', webhook_type: 'type' }]);
+            const exitError = new Error('User exited');
+            exitError.name = 'ExitPromptError';
+            select.mockRejectedValue(exitError);
+
+            await program.parseAsync(['node', 'test', 'webhook', 'show']);
+
+            expect(handleError).not.toHaveBeenCalled();
+        });
+
+        it('should handle error when webhook not found', async () => {
+            mockClient.get.mockResolvedValue([{ hook_name: 'Other Hook', webhook_type: 'type' }]);
+
+            await program.parseAsync(['node', 'test', 'webhook', 'show', 'Missing Hook']);
+
+            expect(handleError).toHaveBeenCalled();
+        });
+    });
+
+    describe('webhook create additional cases', () => {
+        it('should throw on invalid JSON for --fields option', async () => {
+            await program.parseAsync([
+                'node', 'test', 'webhook', 'create',
+                '--name', 'Hook',
+                '--webhook-method', 'observer.test',
+                '--url', 'http://example.com',
+                '--fields', 'not-valid-json'
+            ]);
+
+            expect(handleError).toHaveBeenCalled();
+        });
+
+        it('should handle supportedTypes fetch failure and fall back to manual input', async () => {
+            mockClient.get.mockRejectedValue(new Error('Fetch failed'));
+            mockClient.post.mockResolvedValue(true);
+
+            input.mockResolvedValueOnce('Custom Hook')  // name
+                .mockResolvedValueOnce('observer.custom_event') // webhook method
+                .mockResolvedValueOnce('http://example.com') // url
+                .mockResolvedValueOnce('default') // batch name
+                .mockResolvedValueOnce('0').mockResolvedValueOnce('0')
+                .mockResolvedValueOnce('5000').mockResolvedValueOnce('3000')
+                .mockResolvedValueOnce('3600').mockResolvedValueOnce('Error msg');
+
+            select.mockResolvedValueOnce('after').mockResolvedValueOnce('POST').mockResolvedValueOnce(false);
+            confirm.mockResolvedValue(false);
+
+            await program.parseAsync(['node', 'test', 'webhook', 'create']);
+
+            expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Warning: Could not fetch supported webhook types'));
+        });
+
+        it('should handle CUSTOM_OPTION selection in search', async () => {
+            mockClient.get.mockResolvedValueOnce([{ name: 'observer.test' }]);
+            mockClient.post.mockResolvedValue(true);
+
+            input.mockResolvedValueOnce('Hook')  // name
+                .mockResolvedValueOnce('observer.my_custom') // custom method after CUSTOM_OPTION
+                .mockResolvedValueOnce('http://example.com') // url
+                .mockResolvedValueOnce('default').mockResolvedValueOnce('0')
+                .mockResolvedValueOnce('0').mockResolvedValueOnce('5000')
+                .mockResolvedValueOnce('3000').mockResolvedValueOnce('3600')
+                .mockResolvedValueOnce('Error msg');
+
+            const CUSTOM_OPTION = '-- Enter custom webhook method --';
+            search.mockResolvedValueOnce(CUSTOM_OPTION);
+            select.mockResolvedValueOnce('after').mockResolvedValueOnce('POST').mockResolvedValueOnce(false);
+            confirm.mockResolvedValue(false);
+
+            await program.parseAsync(['node', 'test', 'webhook', 'create']);
+
+            expect(mockClient.post).toHaveBeenCalledWith('V1/webhooks/subscribe', expect.objectContaining({
+                webhook: expect.objectContaining({ webhook_method: 'observer.my_custom' })
+            }));
+        });
+
+        it('should handle ExitPromptError during create', async () => {
+            const exitError = new Error('User exited');
+            exitError.name = 'ExitPromptError';
+            input.mockRejectedValue(exitError);
+
+            await program.parseAsync(['node', 'test', 'webhook', 'create']);
+
+            expect(handleError).not.toHaveBeenCalled();
+        });
     });
 });

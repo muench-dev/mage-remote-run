@@ -47,7 +47,7 @@ jest.unstable_mockModule('../lib/commands/shipments.js', () => ({ registerShipme
 jest.unstable_mockModule('../lib/commands/rest.js', () => ({ registerRestCommands: registrars.registerRestCommands }));
 jest.unstable_mockModule('../lib/commands/plugins.js', () => ({ registerPluginsCommands: registrars.registerPluginsCommands }));
 
-const { registerCommands } = await import('../lib/command-registry.js');
+const { registerCommands, registerCoreCommands, registerCloudCommands } = await import('../lib/command-registry.js');
 
 describe('Command Registry', () => {
     let program;
@@ -162,5 +162,40 @@ describe('Command Registry', () => {
         expect(registrars.registerWebhooksCommands).toHaveBeenCalledWith(program, profile);
         expect(registrars.registerImportCommands).toHaveBeenCalledWith(program, profile);
         expect(registrars.registerModulesCommands).not.toHaveBeenCalled();
+    });
+
+    test('unknown type: falls back to CORE commands only', () => {
+        const profile = { type: 'unknown-type' };
+        registerCommands(program, profile);
+        expect(registrars.registerConnectionCommands).toHaveBeenCalled();
+        expect(registrars.registerWebsitesCommands).toHaveBeenCalled();
+        expect(registrars.registerCompanyCommands).not.toHaveBeenCalled();
+    });
+
+    test('registerCoreCommands: registers all core command groups', () => {
+        registerCoreCommands(program);
+        expect(registrars.registerWebsitesCommands).toHaveBeenCalledWith(program);
+        expect(registrars.registerStoresCommands).toHaveBeenCalledWith(program);
+        expect(registrars.registerCustomersCommands).toHaveBeenCalledWith(program);
+        expect(registrars.registerProductsCommands).toHaveBeenCalledWith(program);
+        expect(registrars.registerShipmentCommands).toHaveBeenCalledWith(program);
+        expect(registrars.registerConsoleCommand).toHaveBeenCalledWith(program);
+    });
+
+    test('registerCloudCommands: registers commerce and cloud commands for B2B-enabled profile', () => {
+        const profile = { type: 'ac-cloud-paas', b2bModulesAvailable: true };
+        registerCloudCommands(program, profile);
+        expect(registrars.registerCompanyCommands).toHaveBeenCalledWith(program, profile);
+        expect(registrars.registerPurchaseOrderCartCommands).toHaveBeenCalledWith(program, profile);
+        expect(registrars.registerEventsCommands).toHaveBeenCalledWith(program, profile);
+        expect(registrars.registerWebhooksCommands).toHaveBeenCalledWith(program, profile);
+        expect(registrars.registerImportCommands).toHaveBeenCalledWith(program, profile);
+    });
+
+    test('registerCloudCommands: skips B2B commands when unavailable', () => {
+        const profile = { type: 'ac-cloud-paas', b2bModulesAvailable: false };
+        registerCloudCommands(program, profile);
+        expect(registrars.registerCompanyCommands).not.toHaveBeenCalled();
+        expect(registrars.registerEventsCommands).toHaveBeenCalledWith(program, profile);
     });
 });
