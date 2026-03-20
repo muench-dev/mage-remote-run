@@ -66,6 +66,29 @@ describe('PluginLoader', () => {
         consoleSpy.mockRestore();
     });
 
+    it('should load static configuration without evaluating default export if present', async () => {
+        // Here we simulate the plugin loader picking up a package.json static configuration
+        // Our example plugin `examples/virtual-command-plugin` has a `mage-remote-run.json`.
+        const STATIC_PLUGIN_PATH = path.join(__dirname, '../examples/virtual-command-plugin');
+        
+        loadConfig.mockResolvedValue({
+            plugins: [STATIC_PLUGIN_PATH],
+            commands: [] // Pre-Initialize empty
+        });
+
+        const loader = new PluginLoader(context);
+        loader.appContext.config = { commands: [] };
+        await loader.loadPlugins();
+
+        expect(loader.plugins).toHaveLength(1); // The plugin module pushes metadata
+        expect(loader.appContext.config.commands).toHaveLength(3);
+        expect(loader.appContext.config.commands.map(command => command.name)).toEqual([
+            'example virtual get-country',
+            'example virtual get-countries',
+            'example virtual get-products-starting-with-letter'
+        ]);
+    });
+
     it('should handle plugin execution errors', async () => {
         // We can't easily mock a broken import without mocking the FS or module system deeply.
         // But we can test if the plugin module itself throws.

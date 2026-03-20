@@ -1,0 +1,65 @@
+{
+  "commands": [
+    {
+      "name": "example virtual get-country",
+      "method": "GET",
+      "endpoint": "/:storeId/V1/directory/countries/:countryId",
+      "description": "Fetch detailed information for a specific country by its ID",
+      "summary": "GET /V1/directory/countries/:countryId",
+      "supports_filters": false,
+      "options": {
+        "storeId": {
+          "type": "string",
+          "required": false,
+          "description": "The store ID code (e.g., all, default)",
+          "default": "all"
+        },
+        "countryId": {
+          "type": "string",
+          "required": true,
+          "description": "The country ID code (e.g., US, DE)"
+        }
+      }
+    },
+    {
+      "name": "example virtual get-countries",
+      "method": "GET",
+      "endpoint": "/:storeId/V1/directory/countries",
+      "description": "Fetch detailed information for all countries",
+      "summary": "GET /V1/directory/countries",
+      "supports_filters": true,
+      "options": {
+        "storeId": {
+          "type": "string",
+          "required": false,
+          "description": "The store ID code (e.g., all, default)",
+          "default": "all"
+        }
+      }
+    },
+    {
+      "name": "example virtual get-products-starting-with-letter",
+      "method": "GET",
+      "endpoint": "/:storeId/V1/products",
+      "description": "Lists products whose name starts with the provided letter using a predefined virtual-command filter",
+      "summary": "GET /V1/products with predefined like filter",
+      "supports_filters": true,
+      "filters": [
+        "name:like=${firstLetter}*"
+      ],
+      "options": {
+        "storeId": {
+          "type": "string",
+          "required": false,
+          "description": "The store ID code (e.g., all, default)",
+          "default": "all"
+        },
+        "firstLetter": {
+          "type": "string",
+          "required": true,
+          "description": "The first letter of the product name"
+        }
+      }
+    }
+  ]
+}

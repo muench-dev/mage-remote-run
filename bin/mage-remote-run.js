@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { loadConfig } from '../lib/config.js';
+import { loadConfig, saveConfig } from '../lib/config.js';
 import chalk from 'chalk';
 
 import { createRequire } from 'module';
@@ -58,6 +58,8 @@ program.command('mcp [args...]')
   .option('--host <host>', 'HTTP Host', '127.0.0.1')
   .option('--port <port>', 'HTTP Port', '18098')
   .option('--token <token>', 'Authentication token')
+  .option('--include <patterns>', 'Include command patterns/groups (default: "@safe")')
+  .option('--exclude <patterns>', 'Exclude command patterns/groups (exclusions win)')
   .allowExcessArguments(true)
   .allowUnknownOption(true)
   .action(async (args, options) => {
@@ -76,20 +78,23 @@ const profile = await getActiveProfile();
 // but we can pass a way to get it or just pass null for now if not used at startup.
 // Also mcpServer is not running here unless mcp command is used.
 const appContext = {
-    program,
-    config: await loadConfig(), // Re-load or reuse config
-    profile,
-    eventBus,
-    events,
-    createClient
+  program,
+  config: await loadConfig(), // Re-load or reuse config
+  saveConfig,
+  profile,
+  eventBus,
+  events,
+  createClient
 };
 
 const pluginLoader = new PluginLoader(appContext);
 await pluginLoader.loadPlugins();
 
 eventBus.emit(events.INIT, appContext);
+import { registerVirtualCommands } from '../lib/commands/virtual.js';
 
 registerCommands(program, profile);
+registerVirtualCommands(program, appContext.config, profile);
 
 program.hook('preAction', async (thisCommand, actionCommand) => {
   eventBus.emit(events.BEFORE_COMMAND, { thisCommand, actionCommand, profile });
@@ -111,7 +116,7 @@ program.hook('preAction', async (thisCommand, actionCommand) => {
 });
 
 program.hook('postAction', async (thisCommand, actionCommand) => {
-    eventBus.emit(events.AFTER_COMMAND, { thisCommand, actionCommand, profile });
+  eventBus.emit(events.AFTER_COMMAND, { thisCommand, actionCommand, profile });
 });
 
 import { expandCommandAbbreviations } from '../lib/command-helper.js';
