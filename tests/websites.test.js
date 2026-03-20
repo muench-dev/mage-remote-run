@@ -92,4 +92,68 @@ describe('Websites Commands', () => {
 
         expect(mockClient.delete).toHaveBeenCalledWith('V1/store/websites/1');
     });
+
+    it('delete: should not delete if not confirmed', async () => {
+        inquirer.default.prompt.mockResolvedValue({ confirm: false });
+
+        await program.parseAsync(['node', 'test', 'website', 'delete', '1']);
+
+        expect(mockClient.delete).not.toHaveBeenCalled();
+    });
+
+    it('list: should output json format', async () => {
+        mockClient.get.mockResolvedValue([
+            { id: 1, code: 'base', name: 'Main', default_group_id: 1 }
+        ]);
+
+        await program.parseAsync(['node', 'test', 'website', 'list', '--format', 'json']);
+
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('"code"'));
+    });
+
+    it('list: should handle errors', async () => {
+        mockClient.get.mockRejectedValue(new Error('Network error'));
+
+        await program.parseAsync(['node', 'test', 'website', 'list']);
+
+        expect(consoleErrorSpy).toHaveBeenCalled();
+    });
+
+    it('search: should handle errors', async () => {
+        mockClient.get.mockRejectedValue(new Error('Network error'));
+
+        await program.parseAsync(['node', 'test', 'website', 'search', 'Main']);
+
+        expect(consoleErrorSpy).toHaveBeenCalled();
+    });
+
+    it('edit: should edit a website', async () => {
+        mockClient.get.mockResolvedValue([
+            { id: 1, code: 'base', name: 'Main', default_group_id: 1, sort_order: 0 }
+        ]);
+        inquirer.default.prompt.mockResolvedValue({
+            name: 'Updated Main',
+            code: 'base',
+            default_group_id: 1,
+            sort_order: 0
+        });
+        mockClient.put.mockResolvedValue({});
+
+        await program.parseAsync(['node', 'test', 'website', 'edit', '1']);
+
+        expect(mockClient.put).toHaveBeenCalledWith('V1/store/websites/1', expect.objectContaining({
+            website: expect.objectContaining({ id: 1, name: 'Updated Main' })
+        }));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('updated'));
+    });
+
+    it('edit: should handle website not found', async () => {
+        mockClient.get.mockResolvedValue([
+            { id: 2, code: 'other', name: 'Other', default_group_id: 2, sort_order: 0 }
+        ]);
+
+        await program.parseAsync(['node', 'test', 'website', 'edit', '1']);
+
+        expect(consoleErrorSpy).toHaveBeenCalled();
+    });
 });
