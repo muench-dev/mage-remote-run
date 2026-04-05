@@ -21,10 +21,10 @@ jest.unstable_mockModule('../lib/api/spec-loader.js', () => ({
 // Mock openapi-client-axios
 jest.unstable_mockModule('openapi-client-axios', () => ({
     OpenAPIClientAxios: jest.fn().mockImplementation(() => ({
-        getClient: jest.fn().mockResolvedValue({
-            interceptors: {
-                request: { use: jest.fn() }
-            }
+        getClient: jest.fn().mockImplementation(() => {
+            const mockAxios = jest.fn();
+            mockAxios.interceptors = { request: { use: jest.fn() } };
+            return Promise.resolve(mockAxios);
         })
     }))
 }));
@@ -155,6 +155,68 @@ describe('SaasClient', () => {
             axios.post.mockRejectedValue(new Error('Network error'));
 
             await expect(client.getToken()).rejects.toThrow('Failed to obtain OAuth2 token: Network error');
+        });
+    });
+
+    describe('init', () => {
+        it('should initialize openApi and axiosInstance', async () => {
+            await client.init();
+            expect(client.openApi).not.toBeNull();
+            expect(client.axiosInstance).not.toBeNull();
+        });
+
+        it('should not re-initialize if already initialized', async () => {
+            await client.init();
+            const firstInstance = client.axiosInstance;
+            await client.init();
+            expect(client.axiosInstance).toBe(firstInstance);
+        });
+    });
+
+    describe('request', () => {
+        beforeEach(async () => {
+            // Provide a static token to avoid token fetch
+            client.config.auth.token = 'static-token';
+            await client.init();
+        });
+
+        it('should return response data on success', async () => {
+            client.axiosInstance.mockResolvedValue({ data: { items: [] } });
+
+            const result = await client.request('get', '/V1/store/websites');
+            expect(result).toEqual({ items: [] });
+        });
+
+        it('should strip leading slash from endpoint', async () => {
+            client.axiosInstance.mockResolvedValue({ data: 'ok' });
+
+            await client.request('get', '/V1/products');
+            expect(client.axiosInstance).toHaveBeenCalledWith(expect.objectContaining({
+                url: 'V1/products'
+            }));
+        });
+
+        it('should throw API error with status code on response error', async () => {
+            const axiosErr = new Error('Unauthorized');
+            axiosErr.response = { status: 401, data: { message: 'Unauthorized' } };
+            client.axiosInstance.mockRejectedValue(axiosErr);
+
+            await expect(client.request('get', '/V1/products')).rejects.toThrow('API Error 401');
+        });
+
+        it('should rethrow non-response errors', async () => {
+            client.axiosInstance.mockRejectedValue(new Error('Network Error'));
+
+            await expect(client.request('get', '/V1/products')).rejects.toThrow('Network Error');
+        });
+
+        it('should have working get/post/put/delete wrappers', async () => {
+            client.axiosInstance.mockResolvedValue({ data: 'ok' });
+
+            expect(await client.get('/V1/test')).toBe('ok');
+            expect(await client.post('/V1/test', {})).toBe('ok');
+            expect(await client.put('/V1/test', {})).toBe('ok');
+            expect(await client.delete('/V1/test')).toBe('ok');
         });
     });
 });

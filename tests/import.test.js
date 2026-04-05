@@ -357,6 +357,114 @@ describe('Import Commands', () => {
         expect(console.error).toHaveBeenCalled();
     });
 
+    test('import json: invalid JSON data should show error', async () => {
+        configMod.loadConfig.mockResolvedValue({
+            activeProfile: 'test',
+            profiles: { 'test': { type: 'ac-cloud-paas' } }
+        });
+
+        // Mock file to return invalid JSON - error thrown before any prompts are reached
+        const { default: fs } = await import('fs');
+        fs.readFileSync.mockReturnValueOnce('not valid json {{{');
+
+        await program.parseAsync([
+            'node', 'test', 'import', 'json', 'test.json',
+            '--entity-type', 'catalog_product',
+            '--behavior', 'append',
+            '--validation-strategy', 'validation-stop-on-errors',
+            '--allowed-error-count', '10'
+        ]);
+
+        expect(console.error).toHaveBeenCalled();
+        expect(mockClient.post).not.toHaveBeenCalled();
+    });
+
+    test('import json: should handle 404/Route error from API', async () => {
+        configMod.loadConfig.mockResolvedValue({
+            activeProfile: 'test',
+            profiles: { 'test': { type: 'ac-cloud-paas' } }
+        });
+
+        const routeError = new Error('Route not found');
+        mockClient.post.mockRejectedValue(routeError);
+
+        await program.parseAsync([
+            'node', 'test', 'import', 'json', 'test.json',
+            '--entity-type', 'catalog_product',
+            '--behavior', 'append',
+            '--validation-strategy', 'validation-stop-on-errors',
+            '--allowed-error-count', '10'
+        ]);
+
+        expect(console.error).toHaveBeenCalled();
+    });
+
+    test('import json: should rethrow non-404 API errors', async () => {
+        configMod.loadConfig.mockResolvedValue({
+            activeProfile: 'test',
+            profiles: { 'test': { type: 'ac-cloud-paas' } }
+        });
+
+        const apiError = new Error('Internal Server Error');
+        mockClient.post.mockRejectedValue(apiError);
+
+        await program.parseAsync([
+            'node', 'test', 'import', 'json', 'test.json',
+            '--entity-type', 'catalog_product',
+            '--behavior', 'append',
+            '--validation-strategy', 'validation-stop-on-errors',
+            '--allowed-error-count', '10'
+        ]);
+
+        expect(console.error).toHaveBeenCalled();
+    });
+
+    test('import csv: should handle 404/Route error from API', async () => {
+        configMod.loadConfig.mockResolvedValue({
+            activeProfile: 'test',
+            profiles: { 'test': { type: 'ac-cloud-paas' } }
+        });
+
+        const routeError = new Error('404 Route not found');
+        mockClient.post.mockRejectedValue(routeError);
+
+        const inquirer = await import('@inquirer/prompts');
+        const search = (await import('@inquirer/search')).default;
+        search.mockResolvedValueOnce('catalog_product');
+        inquirer.select.mockResolvedValueOnce('append');
+
+        await program.parseAsync([
+            'node', 'test', 'import', 'csv', 'test.csv',
+            '--validation-strategy', 'validation-stop-on-errors',
+            '--allowed-error-count', '5'
+        ]);
+
+        expect(console.error).toHaveBeenCalled();
+    });
+
+    test('import json: custom entity type via interactive input', async () => {
+        configMod.loadConfig.mockResolvedValue({
+            activeProfile: 'test',
+            profiles: { 'test': { type: 'ac-cloud-paas' } }
+        });
+
+        const inquirer = await import('@inquirer/prompts');
+        const search = (await import('@inquirer/search')).default;
+
+        search.mockResolvedValueOnce('custom');
+        inquirer.input.mockResolvedValueOnce('my_custom_entity').mockResolvedValueOnce('10');
+        inquirer.select.mockResolvedValueOnce('append').mockResolvedValueOnce('validation-stop-on-errors');
+
+        await program.parseAsync(['node', 'test', 'import', 'json', 'test.json']);
+
+        expect(mockClient.post).toHaveBeenCalledWith(
+            'V1/import/json',
+            expect.objectContaining({
+                source: expect.objectContaining({ entity: 'my_custom_entity' })
+            })
+        );
+    });
+
     test('import prompt validator handles tilde', async () => {
         configMod.loadConfig.mockResolvedValue({
             activeProfile: 'test',

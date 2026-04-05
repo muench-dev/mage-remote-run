@@ -1,0 +1,6 @@
+{
+  "name": "nested-src-plugin",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.js"
+}

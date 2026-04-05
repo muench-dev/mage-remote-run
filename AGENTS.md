@@ -11,8 +11,9 @@ This document provides context for AI agents working on this codebase.
 - **Entry Point**: `bin/mage-remote-run.js`.
 - **Command Registry**: `lib/command-registry.js` manages command registration.
   - `registerCommands`: Registers connection commands plus groups based on the active profile type.
-  - Groups: CORE (websites, stores, customers, orders, products, cart, tax, inventory, shipments, console), COMMERCE (company, purchase-order-cart), CLOUD (events, webhooks), IMPORT, MODULES.
-  - Backward-compat helpers: `registerCoreCommands`, `registerCloudCommands`, and `registerAllCommands`.
+  - Groups: CORE (websites, stores, customers, orders, eav, products, cart, tax, inventory, shipments, console, rest, plugins), COMMERCE (company, purchase-order-cart), CLOUD (events, webhooks), IMPORT, MODULES.
+  - Backward-compat helpers: `registerCoreCommands`, `registerCloudCommands`, and `registerAllCommands` (deprecated — prefer `registerCommands`).
+  - B2B conditional registration: `registerCompanyCommands` and `registerPurchaseOrderCartCommands` are only registered for `ac-on-prem`/`ac-cloud-paas` profiles when `profile.b2bModulesAvailable === true`; for other profile types they are always registered.
 - **Selective Registration**: Commands are registered by profile type (see `TYPE_MAPPINGS` in `lib/command-registry.js`).
 - **Connection Types**:
   - **SaaS** (`ac-saas`, `saas`): Uses `SaasClient` (OpenAPI based).
