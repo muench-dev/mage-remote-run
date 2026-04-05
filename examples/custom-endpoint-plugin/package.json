@@ -6,8 +6,5 @@
   "type": "module",
   "dependencies": {
     "chalk": "^5.0.0"
-  },
-  "peerDependencies": {
-    "mage-remote-run": "^1.5.0"
   }
 }

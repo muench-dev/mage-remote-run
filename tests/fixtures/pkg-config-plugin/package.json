@@ -1,9 +1,0 @@
-{
-  "name": "pkg-config-plugin",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "index.js",
-  "mage-remote-run": {
-    "commands": []
-  }
-}
