@@ -30,7 +30,10 @@ jest.unstable_mockModule('../lib/config.js', () => ({
     loadConfig: jest.fn()
 }));
 
-const { handleError, readInput, validateAdobeCommerce, validatePaaSOrOnPrem, printTable, buildSearchCriteria } = await import('../lib/utils.js');
+const {
+    handleError, readInput, validateAdobeCommerce, validatePaaSOrOnPrem,
+    printTable, buildSearchCriteria, printAddress
+} = await import('../lib/utils.js');
 const fs = (await import('fs')).default;
 const os = (await import('os')).default;
 const configMod = await import('../lib/config.js');
@@ -392,5 +395,78 @@ describe('buildSearchCriteria', () => {
     it('should warn on invalid filter format', () => {
         buildSearchCriteria({ filter: ['invalid_filter'] });
         expect(console.error).toHaveBeenCalled();
+    });
+});
+
+describe('printAddress', () => {
+    let consoleLogSpy;
+
+    beforeEach(() => {
+        consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+    });
+
+    afterEach(() => {
+        consoleLogSpy.mockRestore();
+    });
+
+    it('should print full address with default indentation', () => {
+        const addr = {
+            firstname: 'John',
+            lastname: 'Doe',
+            street: ['123 Main St', 'Suite 100'],
+            city: 'Austin',
+            region: 'Texas',
+            postcode: '78701',
+            country_id: 'US',
+            telephone: '555-1234'
+        };
+
+        printAddress(addr);
+
+        expect(consoleLogSpy).toHaveBeenCalledWith('  John Doe');
+        expect(consoleLogSpy).toHaveBeenCalledWith('  123 Main St');
+        expect(consoleLogSpy).toHaveBeenCalledWith('  Suite 100');
+        expect(consoleLogSpy).toHaveBeenCalledWith('  Austin, Texas, 78701');
+        expect(consoleLogSpy).toHaveBeenCalledWith('  US');
+        expect(consoleLogSpy).toHaveBeenCalledWith('  T: 555-1234');
+    });
+
+    it('should handle missing fields and zero indentation', () => {
+        const addr = {
+            firstname: 'Jane',
+            lastname: 'Smith',
+            city: 'London',
+            country_id: 'GB'
+        };
+
+        printAddress(addr, 0);
+
+        expect(consoleLogSpy).toHaveBeenCalledWith('Jane Smith');
+        expect(consoleLogSpy).toHaveBeenCalledWith('London');
+        expect(consoleLogSpy).toHaveBeenCalledWith('GB');
+        expect(consoleLogSpy).not.toHaveBeenCalledWith(expect.stringContaining('T:'));
+    });
+
+    it('should handle region object', () => {
+        const addr = {
+            firstname: 'A',
+            lastname: 'B',
+            city: 'C',
+            region: { region_code: 'NY' },
+            postcode: '10001'
+        };
+
+        printAddress(addr, 0);
+        expect(consoleLogSpy).toHaveBeenCalledWith('C, NY, 10001');
+    });
+
+    it('should print empty message for empty address', () => {
+        printAddress({}, 2);
+        expect(consoleLogSpy).toHaveBeenCalledWith('  (Empty Address)');
+    });
+
+    it('should return early if no address provided', () => {
+        printAddress(null);
+        expect(consoleLogSpy).not.toHaveBeenCalled();
     });
 });
