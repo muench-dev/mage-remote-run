@@ -30,7 +30,7 @@ jest.unstable_mockModule('../lib/config.js', () => ({
     loadConfig: jest.fn()
 }));
 
-const { handleError, readInput, validateAdobeCommerce, validatePaaSOrOnPrem, printTable, buildSearchCriteria, applyLocalSearchCriteria, getFormatHeaders } = await import('../lib/utils.js');
+const { handleError, readInput, validateAdobeCommerce, validatePaaSOrOnPrem, printTable, buildSearchCriteria, buildSortCriteria, applyLocalSearchCriteria, getFormatHeaders } = await import('../lib/utils.js');
 const fs = (await import('fs')).default;
 const os = (await import('os')).default;
 const configMod = await import('../lib/config.js');
@@ -559,5 +559,76 @@ describe('applyLocalSearchCriteria', () => {
     it('should paginate with only page option', () => {
         const result = applyLocalSearchCriteria(data, { page: '1' });
         expect(result).toHaveLength(3);
+    });
+});
+
+describe('buildSortCriteria', () => {
+    it('should return empty params when no sort options provided', () => {
+        const result = buildSortCriteria({});
+        expect(result.params).toEqual({});
+    });
+
+    it('should parse sort array with field and direction', () => {
+        const result = buildSortCriteria({ sort: ['name:DESC', 'price:ASC'] });
+        expect(result.params).toMatchObject({
+            'searchCriteria[sortOrders][0][field]': 'name',
+            'searchCriteria[sortOrders][0][direction]': 'DESC',
+            'searchCriteria[sortOrders][1][field]': 'price',
+            'searchCriteria[sortOrders][1][direction]': 'ASC'
+        });
+    });
+
+    it('should default to ASC when direction is missing in sort array', () => {
+        const result = buildSortCriteria({ sort: ['name'] });
+        expect(result.params).toMatchObject({
+            'searchCriteria[sortOrders][0][field]': 'name',
+            'searchCriteria[sortOrders][0][direction]': 'ASC'
+        });
+    });
+
+    it('should handle malformed sort strings by taking first part as field', () => {
+        const result = buildSortCriteria({ sort: ['malformed:'] });
+        expect(result.params).toMatchObject({
+            'searchCriteria[sortOrders][0][field]': 'malformed',
+            'searchCriteria[sortOrders][0][direction]': 'ASC'
+        });
+    });
+
+    it('should fallback to sortBy and sortOrder', () => {
+        const result = buildSortCriteria({ sortBy: 'created_at', sortOrder: 'DESC' });
+        expect(result.params).toMatchObject({
+            'searchCriteria[sortOrders][0][field]': 'created_at',
+            'searchCriteria[sortOrders][0][direction]': 'DESC'
+        });
+    });
+
+    it('should default to ASC for sortBy if sortOrder is missing', () => {
+        const result = buildSortCriteria({ sortBy: 'updated_at' });
+        expect(result.params).toMatchObject({
+            'searchCriteria[sortOrders][0][field]': 'updated_at',
+            'searchCriteria[sortOrders][0][direction]': 'ASC'
+        });
+    });
+
+    it('should support manual addSort', () => {
+        const { params, addSort } = buildSortCriteria({});
+        addSort('sku', 'desc');
+        expect(params).toMatchObject({
+            'searchCriteria[sortOrders][0][field]': 'sku',
+            'searchCriteria[sortOrders][0][direction]': 'DESC'
+        });
+    });
+
+    it('should handle empty sort array', () => {
+        const result = buildSortCriteria({ sort: [] });
+        expect(result.params).toEqual({});
+    });
+
+    it('should handle sort string with only colon', () => {
+        const result = buildSortCriteria({ sort: [':'] });
+        expect(result.params).toMatchObject({
+            'searchCriteria[sortOrders][0][field]': '',
+            'searchCriteria[sortOrders][0][direction]': 'ASC'
+        });
     });
 });
