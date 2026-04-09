@@ -47,6 +47,7 @@ Clients must provide the token via:
 - `--token <token>`: Authentication token (HTTP only)
 - `--include <patterns>`: Include command patterns and groups (default: `@safe`)
 - `--exclude <patterns>`: Exclude command patterns and groups (exclude rules have priority)
+- `--ignore-plugins`: Skip loading configured plugins before exposing tools
 
 ## Command filtering
 

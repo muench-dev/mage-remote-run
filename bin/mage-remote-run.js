@@ -15,6 +15,7 @@ program
   .name('mage-remote-run')
   .description('The remote swiss army knife for Magento Open Source, Mage-OS, Adobe Commerce')
   .version(pkg.version)
+  .option('--ignore-plugins', 'Skip loading configured plugins')
   .configureHelp({
     visibleCommands: (cmd) => {
       const commands = cmd.commands.filter(c => !c._hidden);
@@ -49,6 +50,7 @@ import { eventBus, events } from '../lib/events.js';
 import { createClient } from '../lib/api/factory.js';
 import * as utils from '../lib/utils.js';
 import * as commandHelper from '../lib/command-helper.js';
+import { hasIgnorePluginsFlag } from '../lib/cli-options.js';
 
 // Connection commands are registered dynamically via registerCommands
 // But we need them registered early if we want them to show up in help even if config fails?
@@ -69,10 +71,14 @@ program.command('mcp [args...]')
     if (args && args.length > 0) {
       // console.error(chalk.yellow(`[mage-remote-run] Warning: Received extra arguments for mcp command: ${args.join(' ')}`));
     }
-    await startMcpServer(options);
+    await startMcpServer({
+      ...options,
+      ignorePlugins: program.opts().ignorePlugins,
+    });
   });
 
 const profile = await getActiveProfile();
+const ignorePlugins = hasIgnorePluginsFlag(process.argv.slice(2));
 
 // Load Plugins
 // We construct an initial context.
@@ -94,8 +100,10 @@ const appContext = {
   },
 };
 
-const pluginLoader = new PluginLoader(appContext);
-await pluginLoader.loadPlugins();
+if (!ignorePlugins) {
+  const pluginLoader = new PluginLoader(appContext);
+  await pluginLoader.loadPlugins();
+}
 
 eventBus.emit(events.INIT, appContext);
 import { registerVirtualCommands } from '../lib/commands/virtual.js';

@@ -24,3 +24,7 @@ mage-remote-run commands are grouped by resource type. Each command uses the act
 - `mcp`: Run the MCP server.
 
 Run `mage-remote-run --help` to see all available commands and global options.
+
+Global options:
+
+- `--ignore-plugins`: Start the CLI without loading configured plugins.

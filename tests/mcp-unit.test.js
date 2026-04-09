@@ -22,6 +22,7 @@ jest.unstable_mockModule('fs', () => ({
 }));
 
 const mockTools = {};
+const loadPluginsMock = jest.fn(() => Promise.resolve());
 
 jest.unstable_mockModule('@modelcontextprotocol/sdk/server/mcp.js', () => ({
     McpServer: class {
@@ -62,7 +63,7 @@ jest.unstable_mockModule('../lib/command-registry.js', () => ({
 
 jest.unstable_mockModule('../lib/plugin-loader.js', () => ({
     PluginLoader: class {
-        loadPlugins() { return Promise.resolve(); }
+        loadPlugins() { return loadPluginsMock(); }
     }
 }));
 
@@ -84,6 +85,10 @@ describe('mcp direct tests', () => {
     afterAll(() => {
         console.error = originalConsoleError;
         process.stderr.isTTY = originalProcessStderrIsTTY;
+    });
+
+    beforeEach(() => {
+        loadPluginsMock.mockClear();
     });
 
     test('should start http server and generate token if missing', async () => {
@@ -120,6 +125,17 @@ describe('mcp direct tests', () => {
 
         expect(result.content[0].type).toBe('text');
         expect(result.content[0].text).toContain('Mock Command Output!');
+    });
+
+    test('should skip plugin loading when ignorePlugins is enabled', async () => {
+        const { startMcpServer } = await import('../lib/mcp.js');
+
+        await startMcpServer({
+            transport: 'stdio',
+            ignorePlugins: true
+        });
+
+        expect(loadPluginsMock).not.toHaveBeenCalled();
     });
 
     test('tool callback catches exception and returns error', async () => {
