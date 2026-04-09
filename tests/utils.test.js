@@ -30,7 +30,17 @@ jest.unstable_mockModule('../lib/config.js', () => ({
     loadConfig: jest.fn()
 }));
 
-const { handleError, readInput, validateAdobeCommerce, validatePaaSOrOnPrem, printTable, buildSearchCriteria, buildSortCriteria, applyLocalSearchCriteria, getFormatHeaders } = await import('../lib/utils.js');
+const {
+    handleError,
+    readInput,
+    validateAdobeCommerce,
+    validatePaaSOrOnPrem,
+    printTable,
+    buildSearchCriteria,
+    buildSortCriteria,
+    applyLocalSearchCriteria,
+    getFormatHeaders
+} = await import('../lib/utils.js');
 const fs = (await import('fs')).default;
 const os = (await import('os')).default;
 const configMod = await import('../lib/config.js');
@@ -630,5 +640,94 @@ describe('buildSortCriteria', () => {
             'searchCriteria[sortOrders][0][field]': '',
             'searchCriteria[sortOrders][0][direction]': 'ASC'
         });
+    });
+});
+
+describe('applyLocalSearchCriteria', () => {
+    const data = [
+        { id: 1, name: 'Product A', price: 10, status: 'enabled', category_ids: '1,2' },
+        { id: 2, name: 'Product B', price: 20, status: 'disabled', category_ids: '2,3' },
+        { id: 3, name: 'Service C', price: 15, status: 'enabled', category_ids: '1' },
+    ];
+
+    it('should filter by equality', () => {
+        const result = applyLocalSearchCriteria(data, { filter: ['status=enabled'] });
+        expect(result).toHaveLength(2);
+        expect(result[0].id).toBe(1);
+        expect(result[1].id).toBe(3);
+    });
+
+    it('should filter by shorthand operators', () => {
+        const result = applyLocalSearchCriteria(data, { filter: ['price>10'] });
+        expect(result).toHaveLength(2);
+        expect(result[0].id).toBe(2);
+        expect(result[1].id).toBe(3);
+    });
+
+    it('should filter by like with wildcards', () => {
+        const result = applyLocalSearchCriteria(data, { filter: ['name~*Product*'] });
+        expect(result).toHaveLength(2);
+        expect(result[0].id).toBe(1);
+        expect(result[1].id).toBe(2);
+    });
+
+    it('should filter with OR logic using ||', () => {
+        const result = applyLocalSearchCriteria(data, { filter: ['id=1 || id=2'] });
+        expect(result).toHaveLength(2);
+        expect(result.map(i => i.id)).toContain(1);
+        expect(result.map(i => i.id)).toContain(2);
+    });
+
+    it('should sort data ASC', () => {
+        const result = applyLocalSearchCriteria(data, { sort: ['price:ASC'] });
+        expect(result[0].id).toBe(1);
+        expect(result[1].id).toBe(3);
+        expect(result[2].id).toBe(2);
+    });
+
+    it('should sort data DESC', () => {
+        const result = applyLocalSearchCriteria(data, { sort: ['price:DESC'] });
+        expect(result[0].id).toBe(2);
+        expect(result[1].id).toBe(3);
+        expect(result[2].id).toBe(1);
+    });
+
+    it('should paginate data', () => {
+        const result = applyLocalSearchCriteria(data, { page: 2, size: 1 });
+        expect(result).toHaveLength(1);
+        expect(result[0].id).toBe(2);
+    });
+
+    it('should sort data using sortBy and sortOrder', () => {
+        const result = applyLocalSearchCriteria(data, { sortBy: 'price', sortOrder: 'DESC' });
+        expect(result[0].id).toBe(2);
+        expect(result[1].id).toBe(3);
+        expect(result[2].id).toBe(1);
+    });
+
+    it('should handle in/nin operators', () => {
+        const resIn = applyLocalSearchCriteria(data, { filter: ['id:in=1,3'] });
+        expect(resIn).toHaveLength(2);
+        expect(resIn.map(i => i.id)).toEqual([1, 3]);
+
+        const resNin = applyLocalSearchCriteria(data, { filter: ['id:nin=1,3'] });
+        expect(resNin).toHaveLength(1);
+        expect(resNin[0].id).toBe(2);
+    });
+
+    it('should handle null/notnull operators', () => {
+        const dataWithNull = [...data, { id: 4, name: null }];
+        const resNull = applyLocalSearchCriteria(dataWithNull, { filter: ['name?'] });
+        expect(resNull).toHaveLength(1);
+        expect(resNull[0].id).toBe(4);
+
+        const resNotNull = applyLocalSearchCriteria(dataWithNull, { filter: ['name!'] });
+        expect(resNotNull).toHaveLength(3);
+    });
+
+    it('should handle finset operator', () => {
+        const result = applyLocalSearchCriteria(data, { filter: ['category_ids@@3'] });
+        expect(result).toHaveLength(1);
+        expect(result[0].id).toBe(2);
     });
 });
