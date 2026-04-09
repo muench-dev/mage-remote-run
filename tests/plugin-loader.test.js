@@ -59,6 +59,24 @@ describe('PluginLoader', () => {
         expect(eventBus.on).toHaveBeenCalledWith(events.BEFORE_COMMAND, expect.any(Function));
     });
 
+    it('should load a plugin from a tilde path', async () => {
+        const originalHome = process.env.HOME;
+        process.env.HOME = path.dirname(EXAMPLE_PLUGIN_PATH);
+
+        loadConfig.mockResolvedValue({
+            plugins: ['~/hello-world-plugin']
+        });
+
+        const loader = new PluginLoader(context);
+        await loader.loadPlugins();
+
+        expect(loader.plugins).toHaveLength(1);
+        expect(loader.plugins[0].name).toBe('~/hello-world-plugin');
+        expect(program.command).toHaveBeenCalledWith('hello');
+
+        process.env.HOME = originalHome;
+    });
+
     it('should handle missing plugins gracefully', async () => {
         loadConfig.mockResolvedValue({
             plugins: ['non-existent-plugin']

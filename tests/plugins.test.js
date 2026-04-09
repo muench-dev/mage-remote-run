@@ -54,6 +54,20 @@ describe('Plugin Commands', () => {
       expect(saveConfig).toHaveBeenCalledWith({ plugins: ['/resolved/plugins/my-plugin'] });
     });
 
+    it('should keep tilde paths in config while resolving them against home', async () => {
+      const originalHome = process.env.HOME;
+      process.env.HOME = '/Users/tester';
+      loadConfig.mockResolvedValue({ plugins: [] });
+      realpath.mockResolvedValue('/Users/tester/plugins/my-plugin');
+
+      await program.parseAsync(['node', 'test', 'plugin', 'register', '~/plugins/my-plugin']);
+
+      expect(realpath).toHaveBeenCalledWith('/Users/tester/plugins/my-plugin');
+      expect(saveConfig).toHaveBeenCalledWith({ plugins: ['~/plugins/my-plugin'] });
+
+      process.env.HOME = originalHome;
+    });
+
     it('should resolve relative path without dot prefix', async () => {
       loadConfig.mockResolvedValue({ plugins: [] });
       realpath.mockResolvedValue('/resolved/plugins/my-plugin');
@@ -111,6 +125,20 @@ describe('Plugin Commands', () => {
 
       expect(realpath).toHaveBeenCalledWith('./plugins/plugin-a');
       expect(saveConfig).toHaveBeenCalledWith({ plugins: ['plugin-b'] });
+    });
+
+    it('should unregister a tilde path plugin using its resolved location', async () => {
+      const originalHome = process.env.HOME;
+      process.env.HOME = '/Users/tester';
+      loadConfig.mockResolvedValue({ plugins: ['~/plugins/plugin-a', 'plugin-b'] });
+      realpath.mockImplementation(async (value) => value === '/Users/tester/plugins/plugin-a' ? value : value);
+
+      await program.parseAsync(['node', 'test', 'plugin', 'unregister', '~/plugins/plugin-a']);
+
+      expect(realpath).toHaveBeenCalledWith('/Users/tester/plugins/plugin-a');
+      expect(saveConfig).toHaveBeenCalledWith({ plugins: ['plugin-b'] });
+
+      process.env.HOME = originalHome;
     });
 
     it('should warn if plugin not found', async () => {
