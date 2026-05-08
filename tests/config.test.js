@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import path from 'path';
+import crypto from 'crypto';
 
 // Helper to verify path handling
 const isDarwin = process.platform === 'darwin';
@@ -36,7 +37,9 @@ jest.unstable_mockModule('env-paths', () => ({
 
 jest.unstable_mockModule('os', () => ({
     default: {
-        homedir: jest.fn(() => MOCK_HOME)
+        homedir: jest.fn(() => MOCK_HOME),
+        userInfo: jest.fn(() => ({ username: 'testuser' })),
+        hostname: jest.fn(() => 'testhost')
     }
 }));
 
@@ -44,6 +47,21 @@ jest.unstable_mockModule('os', () => ({
 const configMod = await import('../lib/config.js');
 const fs = (await import('fs')).default;
 const { mkdirp } = await import('mkdirp');
+
+function decrypt(text) {
+    try {
+        const textParts = text.split(':');
+        const iv = Buffer.from(textParts.shift(), 'hex');
+        const encryptedText = Buffer.from(textParts.join(':'), 'hex');
+        const info = 'testuser' + 'testhost';
+        const key = crypto.createHash('sha256').update(info).digest();
+        const decipher = crypto.createDecipheriv('aes-256-ctr', key, iv);
+        const decrypted = Buffer.concat([decipher.update(encryptedText), decipher.final()]);
+        return decrypted.toString();
+    } catch (e) {
+        return null;
+    }
+}
 
 describe('Config Management', () => {
     let consoleLogSpy;
@@ -121,11 +139,14 @@ describe('Config Management', () => {
             await configMod.saveConfig(config);
 
             expect(mkdirp).toHaveBeenCalledWith(EXPECTED_CONFIG_DIR);
-            expect(fs.writeFileSync).toHaveBeenCalledWith(
-                EXPECTED_CONFIG_FILE,
-                JSON.stringify(config, null, 2),
-                { mode: 0o600 }
-            );
+
+            const writeCall = fs.writeFileSync.mock.calls.find(call => call[0] === EXPECTED_CONFIG_FILE);
+            expect(writeCall).toBeDefined();
+            expect(writeCall[2]).toEqual({ mode: 0o600 });
+
+            const decrypted = JSON.parse(decrypt(writeCall[1]));
+            expect(decrypted).toEqual(config);
+
             expect(fs.chmodSync).toHaveBeenCalledWith(EXPECTED_CONFIG_FILE, 0o600);
         });
 
@@ -163,15 +184,14 @@ describe('Config Management', () => {
             await configMod.addProfile('NewProfile', { url: 'http://test.com' });
 
             // Verify saveConfig was called with correct data
-            expect(fs.writeFileSync).toHaveBeenCalledWith(
-                EXPECTED_CONFIG_FILE,
-                expect.stringContaining('"NewProfile":'),
-                expect.anything()
-            );
+            const writeCall = fs.writeFileSync.mock.calls.find(call => call[0] === EXPECTED_CONFIG_FILE);
+            expect(writeCall).toBeDefined();
+
+            const decrypted = decrypt(writeCall[1]);
+            expect(decrypted).toContain('"NewProfile":');
 
             // Verify activeProfile was set
-            const saveCall = fs.writeFileSync.mock.calls[0];
-            const savedConfig = JSON.parse(saveCall[1]);
+            const savedConfig = JSON.parse(decrypted);
             expect(savedConfig.activeProfile).toBe('NewProfile');
             expect(savedConfig.profiles['NewProfile']).toEqual({ url: 'http://test.com' });
         });
@@ -187,8 +207,10 @@ describe('Config Management', () => {
 
             await configMod.addProfile('NewProfile', { url: 'http://test.com' });
 
-            const saveCall = fs.writeFileSync.mock.calls[0];
-            const savedConfig = JSON.parse(saveCall[1]);
+            const writeCall = fs.writeFileSync.mock.calls.find(call => call[0] === EXPECTED_CONFIG_FILE);
+            expect(writeCall).toBeDefined();
+
+            const savedConfig = JSON.parse(decrypt(writeCall[1]));
             expect(savedConfig.activeProfile).toBe('Existing');
             expect(savedConfig.profiles['NewProfile']).toEqual({ url: 'http://test.com' });
         });
@@ -272,11 +294,14 @@ describe('Config Management', () => {
             await configMod.saveTokenCache(cache);
 
             expect(mkdirp).toHaveBeenCalledWith(EXPECTED_CACHE_DIR);
-            expect(fs.writeFileSync).toHaveBeenCalledWith(
-                EXPECTED_TOKEN_CACHE_FILE,
-                JSON.stringify(cache, null, 2),
-                { mode: 0o600 }
-            );
+
+            const writeCall = fs.writeFileSync.mock.calls.find(call => call[0] === EXPECTED_TOKEN_CACHE_FILE);
+            expect(writeCall).toBeDefined();
+            expect(writeCall[2]).toEqual({ mode: 0o600 });
+
+            const decrypted = JSON.parse(decrypt(writeCall[1]));
+            expect(decrypted).toEqual(cache);
+
             expect(fs.chmodSync).toHaveBeenCalledWith(EXPECTED_TOKEN_CACHE_FILE, 0o600);
         });
 
