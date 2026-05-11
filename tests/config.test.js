@@ -22,7 +22,13 @@ jest.unstable_mockModule('fs', () => ({
         writeFileSync: jest.fn(),
         copyFileSync: jest.fn(),
         chmodSync: jest.fn(),
-        unlinkSync: jest.fn()
+        unlinkSync: jest.fn(),
+        promises: {
+            readFile: jest.fn(),
+            writeFile: jest.fn(),
+            chmod: jest.fn(),
+            unlink: jest.fn()
+        }
     }
 }));
 
@@ -77,7 +83,7 @@ describe('Config Management', () => {
 
         it('should load and parse config file', async () => {
             fs.existsSync.mockReturnValue(true);
-            fs.readFileSync.mockReturnValue(JSON.stringify({
+            fs.promises.readFile.mockResolvedValue(JSON.stringify({
                 profiles: { test: {} },
                 activeProfile: 'test'
             }));
@@ -89,12 +95,12 @@ describe('Config Management', () => {
                 activeProfile: 'test',
                 plugins: []
             });
-            expect(fs.readFileSync).toHaveBeenCalledWith(EXPECTED_CONFIG_FILE, 'utf-8');
+            expect(fs.promises.readFile).toHaveBeenCalledWith(EXPECTED_CONFIG_FILE, 'utf-8');
         });
 
         it('should handle JSON parse errors', async () => {
             fs.existsSync.mockReturnValue(true);
-            fs.readFileSync.mockReturnValue('invalid json');
+            fs.promises.readFile.mockResolvedValue('invalid json');
 
             const config = await configMod.loadConfig();
 
@@ -104,7 +110,7 @@ describe('Config Management', () => {
 
         it('should ensure plugins array exists', async () => {
             fs.existsSync.mockReturnValue(true);
-            fs.readFileSync.mockReturnValue(JSON.stringify({
+            fs.promises.readFile.mockResolvedValue(JSON.stringify({
                 profiles: {}
             }));
 
@@ -121,12 +127,12 @@ describe('Config Management', () => {
             await configMod.saveConfig(config);
 
             expect(mkdirp).toHaveBeenCalledWith(EXPECTED_CONFIG_DIR);
-            expect(fs.writeFileSync).toHaveBeenCalledWith(
+            expect(fs.promises.writeFile).toHaveBeenCalledWith(
                 EXPECTED_CONFIG_FILE,
                 JSON.stringify(config, null, 2),
                 { mode: 0o600 }
             );
-            expect(fs.chmodSync).toHaveBeenCalledWith(EXPECTED_CONFIG_FILE, 0o600);
+            expect(fs.promises.chmod).toHaveBeenCalledWith(EXPECTED_CONFIG_FILE, 0o600);
         });
 
         it('should log debug message if DEBUG env var is set', async () => {
@@ -163,14 +169,14 @@ describe('Config Management', () => {
             await configMod.addProfile('NewProfile', { url: 'http://test.com' });
 
             // Verify saveConfig was called with correct data
-            expect(fs.writeFileSync).toHaveBeenCalledWith(
+            expect(fs.promises.writeFile).toHaveBeenCalledWith(
                 EXPECTED_CONFIG_FILE,
                 expect.stringContaining('"NewProfile":'),
                 expect.anything()
             );
 
             // Verify activeProfile was set
-            const saveCall = fs.writeFileSync.mock.calls[0];
+            const saveCall = fs.promises.writeFile.mock.calls[0];
             const savedConfig = JSON.parse(saveCall[1]);
             expect(savedConfig.activeProfile).toBe('NewProfile');
             expect(savedConfig.profiles['NewProfile']).toEqual({ url: 'http://test.com' });
@@ -179,7 +185,7 @@ describe('Config Management', () => {
         it('should add profile but NOT change active if one exists', async () => {
             // Mock loadConfig to return existing profile
             fs.existsSync.mockReturnValue(true);
-            fs.readFileSync.mockReturnValue(JSON.stringify({
+            fs.promises.readFile.mockResolvedValue(JSON.stringify({
                 profiles: { 'Existing': {} },
                 activeProfile: 'Existing',
                 plugins: []
@@ -187,7 +193,7 @@ describe('Config Management', () => {
 
             await configMod.addProfile('NewProfile', { url: 'http://test.com' });
 
-            const saveCall = fs.writeFileSync.mock.calls[0];
+            const saveCall = fs.promises.writeFile.mock.calls[0];
             const savedConfig = JSON.parse(saveCall[1]);
             expect(savedConfig.activeProfile).toBe('Existing');
             expect(savedConfig.profiles['NewProfile']).toEqual({ url: 'http://test.com' });
@@ -197,7 +203,7 @@ describe('Config Management', () => {
     describe('getActiveProfile', () => {
         it('should return active profile with name', async () => {
             fs.existsSync.mockReturnValue(true);
-            fs.readFileSync.mockReturnValue(JSON.stringify({
+            fs.promises.readFile.mockResolvedValue(JSON.stringify({
                 profiles: { 'MyProfile': { type: 'saas' } },
                 activeProfile: 'MyProfile'
             }));
@@ -209,7 +215,7 @@ describe('Config Management', () => {
 
         it('should return null if no active profile set', async () => {
             fs.existsSync.mockReturnValue(true);
-            fs.readFileSync.mockReturnValue(JSON.stringify({
+            fs.promises.readFile.mockResolvedValue(JSON.stringify({
                 profiles: { 'MyProfile': {} },
                 activeProfile: null
             }));
@@ -221,7 +227,7 @@ describe('Config Management', () => {
 
         it('should return null if active profile does not exist in profiles', async () => {
             fs.existsSync.mockReturnValue(true);
-            fs.readFileSync.mockReturnValue(JSON.stringify({
+            fs.promises.readFile.mockResolvedValue(JSON.stringify({
                 profiles: { 'Other': {} },
                 activeProfile: 'Missing'
             }));
@@ -241,12 +247,12 @@ describe('Config Management', () => {
     describe('Token Cache', () => {
         it('should load token cache', async () => {
             fs.existsSync.mockReturnValue(true);
-            fs.readFileSync.mockReturnValue(JSON.stringify({ token: 'abc' }));
+            fs.promises.readFile.mockResolvedValue(JSON.stringify({ token: 'abc' }));
 
             const cache = await configMod.loadTokenCache();
 
             expect(cache).toEqual({ token: 'abc' });
-            expect(fs.readFileSync).toHaveBeenCalledWith(EXPECTED_TOKEN_CACHE_FILE, 'utf-8');
+            expect(fs.promises.readFile).toHaveBeenCalledWith(EXPECTED_TOKEN_CACHE_FILE, 'utf-8');
         });
 
         it('should return empty object if token cache missing', async () => {
@@ -259,7 +265,7 @@ describe('Config Management', () => {
 
         it('should handle errors loading token cache', async () => {
             fs.existsSync.mockReturnValue(true);
-            fs.readFileSync.mockReturnValue('invalid json');
+            fs.promises.readFile.mockResolvedValue('invalid json');
 
             const cache = await configMod.loadTokenCache();
 
@@ -272,12 +278,12 @@ describe('Config Management', () => {
             await configMod.saveTokenCache(cache);
 
             expect(mkdirp).toHaveBeenCalledWith(EXPECTED_CACHE_DIR);
-            expect(fs.writeFileSync).toHaveBeenCalledWith(
+            expect(fs.promises.writeFile).toHaveBeenCalledWith(
                 EXPECTED_TOKEN_CACHE_FILE,
                 JSON.stringify(cache, null, 2),
                 { mode: 0o600 }
             );
-            expect(fs.chmodSync).toHaveBeenCalledWith(EXPECTED_TOKEN_CACHE_FILE, 0o600);
+            expect(fs.promises.chmod).toHaveBeenCalledWith(EXPECTED_TOKEN_CACHE_FILE, 0o600);
         });
 
         it('should handle errors saving token cache', async () => {
@@ -293,7 +299,7 @@ describe('Config Management', () => {
 
             await configMod.clearTokenCache();
 
-            expect(fs.unlinkSync).toHaveBeenCalledWith(EXPECTED_TOKEN_CACHE_FILE);
+            expect(fs.promises.unlink).toHaveBeenCalledWith(EXPECTED_TOKEN_CACHE_FILE);
         });
 
         it('should do nothing if token cache to clear does not exist', async () => {
@@ -301,12 +307,12 @@ describe('Config Management', () => {
 
             await configMod.clearTokenCache();
 
-            expect(fs.unlinkSync).not.toHaveBeenCalled();
+            expect(fs.promises.unlink).not.toHaveBeenCalled();
         });
 
         it('should handle errors clearing token cache', async () => {
             fs.existsSync.mockReturnValue(true);
-            fs.unlinkSync.mockImplementation(() => { throw new Error('Unlink failed'); });
+            fs.promises.unlink.mockRejectedValue(new Error('Unlink failed'));
 
             await expect(configMod.clearTokenCache()).rejects.toThrow('Unlink failed');
             expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Error clearing token cache'), 'Unlink failed');
