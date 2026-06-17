@@ -11,6 +11,8 @@ const PKG_CONFIG_PLUGIN_PATH = path.join(__dirname, 'fixtures/pkg-config-plugin'
 const OBJECT_DEFAULT_WITH_CONFIG_PATH = path.join(__dirname, 'fixtures/object-default-with-config-plugin');
 const NESTED_SRC_PLUGIN_PATH = path.join(__dirname, 'fixtures/nested-src-plugin');
 const BAD_IMPORT_PLUGIN_PATH = path.join(__dirname, 'fixtures/bad-import-plugin');
+const COMPATIBLE_PEER_PLUGIN_PATH = path.join(__dirname, 'fixtures/compatible-peer-plugin');
+const INCOMPATIBLE_PEER_PLUGIN_PATH = path.join(__dirname, 'fixtures/incompatible-peer-plugin');
 
 // Mock Config
 jest.unstable_mockModule('../lib/config.js', () => ({
@@ -339,5 +341,38 @@ describe('PluginLoader', () => {
 
         delete process.env.DEBUG;
         consoleSpy.mockRestore();
+    });
+
+    it('should not warn when plugin peerDependency is satisfied', async () => {
+        loadConfig.mockResolvedValue({
+            plugins: [COMPATIBLE_PEER_PLUGIN_PATH]
+        });
+
+        const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const loader = new PluginLoader(context);
+        await loader.loadPlugins();
+
+        const peerWarnings = warnSpy.mock.calls.filter(args =>
+            args.some(a => typeof a === 'string' && a.includes('requires mage-remote-run'))
+        );
+        expect(peerWarnings).toHaveLength(0);
+        warnSpy.mockRestore();
+    });
+
+    it('should warn when plugin peerDependency is not satisfied', async () => {
+        loadConfig.mockResolvedValue({
+            plugins: [INCOMPATIBLE_PEER_PLUGIN_PATH]
+        });
+
+        const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const loader = new PluginLoader(context);
+        await loader.loadPlugins();
+
+        const peerWarnings = warnSpy.mock.calls.filter(args =>
+            args.some(a => typeof a === 'string' && a.includes('requires mage-remote-run'))
+        );
+        expect(peerWarnings).toHaveLength(1);
+        expect(peerWarnings[0].join(' ')).toContain('^99.0.0');
+        warnSpy.mockRestore();
     });
 });
