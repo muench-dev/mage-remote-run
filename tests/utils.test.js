@@ -39,7 +39,8 @@ const {
     buildSearchCriteria,
     buildSortCriteria,
     applyLocalSearchCriteria,
-    getFormatHeaders
+    getFormatHeaders,
+    isInteractiveMode
 } = await import('../lib/utils.js');
 const fs = (await import('fs')).default;
 const os = (await import('os')).default;
@@ -729,5 +730,70 @@ describe('applyLocalSearchCriteria', () => {
         const result = applyLocalSearchCriteria(data, { filter: ['category_ids@@3'] });
         expect(result).toHaveLength(1);
         expect(result[0].id).toBe(2);
+    });
+});
+
+describe('isInteractiveMode', () => {
+    const originalEnv = process.env;
+    const originalIsTTY = process.stdin.isTTY;
+
+    beforeEach(() => {
+        process.env = { ...originalEnv };
+        delete process.env.NO_INTERACTIVE;
+        delete process.env.NON_INTERACTIVE;
+        delete process.env.NONINTERACTIVE;
+        delete process.env.CI;
+    });
+
+    afterEach(() => {
+        process.env = originalEnv;
+        Object.defineProperty(process.stdin, 'isTTY', { value: originalIsTTY, writable: true });
+    });
+
+    it('returns true when stdin is a TTY and no env vars are set', () => {
+        Object.defineProperty(process.stdin, 'isTTY', { value: true, writable: true });
+        expect(isInteractiveMode()).toBe(true);
+    });
+
+    it('returns false when stdin is not a TTY', () => {
+        Object.defineProperty(process.stdin, 'isTTY', { value: false, writable: true });
+        expect(isInteractiveMode()).toBe(false);
+    });
+
+    it('returns false when stdin.isTTY is undefined', () => {
+        Object.defineProperty(process.stdin, 'isTTY', { value: undefined, writable: true });
+        expect(isInteractiveMode()).toBe(false);
+    });
+
+    it('returns false when NO_INTERACTIVE=1', () => {
+        Object.defineProperty(process.stdin, 'isTTY', { value: true, writable: true });
+        process.env.NO_INTERACTIVE = '1';
+        expect(isInteractiveMode()).toBe(false);
+    });
+
+    it('returns false when NON_INTERACTIVE=1', () => {
+        Object.defineProperty(process.stdin, 'isTTY', { value: true, writable: true });
+        process.env.NON_INTERACTIVE = '1';
+        expect(isInteractiveMode()).toBe(false);
+    });
+
+    it('returns false when NONINTERACTIVE=1', () => {
+        Object.defineProperty(process.stdin, 'isTTY', { value: true, writable: true });
+        process.env.NONINTERACTIVE = '1';
+        expect(isInteractiveMode()).toBe(false);
+    });
+
+    it('returns false when CI is set', () => {
+        Object.defineProperty(process.stdin, 'isTTY', { value: true, writable: true });
+        process.env.CI = 'true';
+        expect(isInteractiveMode()).toBe(false);
+    });
+
+    it('env var check takes priority over TTY state', () => {
+        Object.defineProperty(process.stdin, 'isTTY', { value: true, writable: true });
+        process.env.NO_INTERACTIVE = '1';
+        process.env.NON_INTERACTIVE = '1';
+        process.env.NONINTERACTIVE = '1';
+        expect(isInteractiveMode()).toBe(false);
     });
 });

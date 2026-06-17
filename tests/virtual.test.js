@@ -12,7 +12,14 @@ jest.unstable_mockModule('../lib/utils.js', () => ({
     addSortOption: jest.fn((cmd) => cmd),
     addPaginationOptions: jest.fn((cmd) => cmd),
     buildSearchCriteria: jest.fn().mockReturnValue({}),
-    buildSortCriteria: jest.fn().mockReturnValue({})
+    buildSortCriteria: jest.fn().mockReturnValue({}),
+    isInteractiveMode: jest.fn().mockImplementation(() => {
+        if (process.env.NO_INTERACTIVE === '1') return false;
+        if (process.env.NON_INTERACTIVE === '1') return false;
+        if (process.env.NONINTERACTIVE === '1') return false;
+        if (process.env.CI) return false;
+        return process.stdin.isTTY === true;
+    })
 }));
 
 jest.unstable_mockModule('chalk', () => ({
