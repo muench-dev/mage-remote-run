@@ -13,13 +13,7 @@ jest.unstable_mockModule('../lib/utils.js', () => ({
     addPaginationOptions: jest.fn((cmd) => cmd),
     buildSearchCriteria: jest.fn().mockReturnValue({}),
     buildSortCriteria: jest.fn().mockReturnValue({}),
-    isInteractiveMode: jest.fn().mockImplementation(() => {
-        if (process.env.NO_INTERACTIVE === '1') return false;
-        if (process.env.NON_INTERACTIVE === '1') return false;
-        if (process.env.NONINTERACTIVE === '1') return false;
-        if (process.env.CI) return false;
-        return process.stdin.isTTY === true;
-    })
+    isInteractiveMode: jest.fn().mockReturnValue(false)
 }));
 
 jest.unstable_mockModule('chalk', () => ({
@@ -38,7 +32,7 @@ jest.unstable_mockModule('@inquirer/prompts', () => ({
 
 const { registerVirtualCommands } = await import('../lib/commands/virtual.js');
 const { createClient } = await import('../lib/api/factory.js');
-const { formatOutput, buildSearchCriteria, handleError } = await import('../lib/utils.js');
+const { formatOutput, buildSearchCriteria, handleError, isInteractiveMode } = await import('../lib/utils.js');
 const { select, input, password } = await import('@inquirer/prompts');
 
 describe('Virtual Commands', () => {
@@ -467,14 +461,12 @@ describe('Virtual Commands', () => {
     });
 
     describe('choices support', () => {
-        let savedIsTTY;
         beforeEach(() => {
-            savedIsTTY = process.stdin.isTTY;
-            process.stdin.isTTY = true;
+            isInteractiveMode.mockReturnValue(true);
             select.mockReset();
         });
         afterEach(() => {
-            process.stdin.isTTY = savedIsTTY;
+            isInteractiveMode.mockReturnValue(false);
         });
 
         it('should use the provided value without prompting when choices are defined', async () => {
@@ -635,15 +627,13 @@ describe('Virtual Commands', () => {
     });
 
     describe('interactive input prompts', () => {
-        let savedIsTTY;
         beforeEach(() => {
-            savedIsTTY = process.stdin.isTTY;
-            process.stdin.isTTY = true;
+            isInteractiveMode.mockReturnValue(true);
             input.mockReset();
             password.mockReset();
         });
         afterEach(() => {
-            process.stdin.isTTY = savedIsTTY;
+            isInteractiveMode.mockReturnValue(false);
         });
 
         it('should prompt with input() for a missing required string option', async () => {
