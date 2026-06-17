@@ -97,6 +97,11 @@
           },
           "parameter": {
             "$ref": "#/definitions/commandInputs"
+          },
+          "body": {
+            "type": "object",
+            "description": "JSON body template for POST/PUT/PATCH requests. String values may contain ${paramName} or {:paramName} placeholders replaced with typed option values at runtime. Nested objects and arrays are supported.",
+            "additionalProperties": true
           }
         },
         "required": ["name", "method", "endpoint"]

@@ -23,9 +23,16 @@ jest.unstable_mockModule('chalk', () => ({
     }
 }));
 
+jest.unstable_mockModule('@inquirer/prompts', () => ({
+    select:   jest.fn(),
+    input:    jest.fn(),
+    password: jest.fn()
+}));
+
 const { registerVirtualCommands } = await import('../lib/commands/virtual.js');
 const { createClient } = await import('../lib/api/factory.js');
-const { formatOutput, buildSearchCriteria } = await import('../lib/utils.js');
+const { formatOutput, buildSearchCriteria, handleError } = await import('../lib/utils.js');
+const { select, input, password } = await import('@inquirer/prompts');
 
 describe('Virtual Commands', () => {
     let program;
@@ -47,6 +54,7 @@ describe('Virtual Commands', () => {
                 summary: jest.fn().mockReturnThis(),
                 requiredOption: jest.fn().mockReturnThis(),
                 option: jest.fn().mockReturnThis(),
+                addOption: jest.fn().mockReturnThis(),
                 action: jest.fn().mockImplementation((fn) => {
                     mockAction = fn;
                     return cmd;
@@ -270,5 +278,161 @@ describe('Virtual Commands', () => {
         expect(buildSearchCriteria).toHaveBeenCalledWith(expect.objectContaining({
             filter: ['name:like=B*']
         }));
+    });
+
+    describe('body template support', () => {
+        it('should use body template instead of flat payload for POST', async () => {
+            config.commands[0].method = 'POST';
+            config.commands[0].body = { customer: { email: '${email}' } };
+            config.commands[0].parameter.email = { type: 'string', required: true, description: 'Email' };
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123', email: 'foo@bar.com' });
+
+            expect(mockClient.request).toHaveBeenCalledWith(
+                'POST', '/V1/test/123',
+                { customer: { email: 'foo@bar.com' } },
+                undefined,
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        });
+
+        it('should preserve deeply nested body structure', async () => {
+            config.commands[0].method = 'POST';
+            config.commands[0].body = { level1: { level2: { field: '${val}' } } };
+            config.commands[0].parameter.val = { type: 'string', required: true, description: 'Val' };
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123', val: 'deep' });
+
+            expect(mockClient.request).toHaveBeenCalledWith(
+                'POST', '/V1/test/123',
+                { level1: { level2: { field: 'deep' } } },
+                undefined,
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        });
+
+        it('should preserve number type for pure single-placeholder values', async () => {
+            config.commands[0].method = 'POST';
+            config.commands[0].body = { websiteId: '${websiteId}' };
+            config.commands[0].parameter.websiteId = { type: 'string', required: false, description: 'Website ID' };
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123', websiteId: 1 });
+
+            expect(mockClient.request).toHaveBeenCalledWith(
+                'POST', '/V1/test/123', { websiteId: 1 }, undefined,
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        });
+
+        it('should preserve boolean type for pure single-placeholder values', async () => {
+            config.commands[0].method = 'POST';
+            config.commands[0].body = { active: '${active}' };
+            config.commands[0].parameter.active = { type: 'boolean', description: 'Active' };
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123', active: true });
+
+            expect(mockClient.request).toHaveBeenCalledWith(
+                'POST', '/V1/test/123', { active: true }, undefined,
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        });
+
+        it('should keep mixed-content string as string type', async () => {
+            config.commands[0].method = 'POST';
+            config.commands[0].body = { label: 'User ${name}' };
+            config.commands[0].parameter.name = { type: 'string', required: true, description: 'Name' };
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123', name: 'Alice' });
+
+            expect(mockClient.request).toHaveBeenCalledWith(
+                'POST', '/V1/test/123', { label: 'User Alice' }, undefined,
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        });
+
+        it('should pass static literal primitives through unchanged', async () => {
+            config.commands[0].method = 'POST';
+            config.commands[0].body = { version: 2, enabled: true };
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(mockClient.request).toHaveBeenCalledWith(
+                'POST', '/V1/test/123', { version: 2, enabled: true }, undefined,
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        });
+
+        it('should substitute path param in URL without duplicating it in body', async () => {
+            config.commands[0].method = 'POST';
+            config.commands[0].body = { email: '${email}' };
+            config.commands[0].parameter.email = { type: 'string', required: true, description: 'Email' };
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '42', email: 'a@b.com' });
+
+            expect(mockClient.request).toHaveBeenCalledWith(
+                'POST', '/V1/test/42', { email: 'a@b.com' }, undefined,
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        });
+
+        it('should support brace syntax {:param} in body template', async () => {
+            config.commands[0].method = 'POST';
+            config.commands[0].body = { name: '{:firstName}' };
+            config.commands[0].parameter.firstName = { type: 'string', required: true, description: 'First name' };
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123', firstName: 'Bob' });
+
+            expect(mockClient.request).toHaveBeenCalledWith(
+                'POST', '/V1/test/123', { name: 'Bob' }, undefined,
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        });
+
+        it('should fall back to flat payload when no body is configured', async () => {
+            config.commands[0].method = 'POST';
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: { created: true } }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '999', optional: 'sure' });
+
+            expect(mockClient.request).toHaveBeenCalledWith(
+                'POST', '/V1/test/999', { optional: 'sure' }, undefined,
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        });
     });
 });
