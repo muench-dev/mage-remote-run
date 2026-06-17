@@ -2,6 +2,7 @@ export default {
     transform: {},
     testEnvironment: 'node',
     clearMocks: true,
+    forceExit: true,
     collectCoverage: true,
     coverageDirectory: 'coverage',
     coveragePathIgnorePatterns: ['/examples/'],
