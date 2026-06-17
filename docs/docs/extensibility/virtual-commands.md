@@ -92,13 +92,18 @@ You can create a parent command group without an executable endpoint by providin
 
 Each entry inside `options` supports:
 
-- `required`: marks the option as required.
-- `default`: sets a fallback value.
-- `description`: adds help text for the option.
-- `short`: adds a short flag such as `-s`.
-- `long`: overrides the generated long flag.
-- `flags`: sets the full Commander flag string directly.
-- `type: "boolean"`: creates a flag without a value placeholder.
+| Property | Type | Description |
+|---|---|---|
+| `required` | `boolean` | Marks the option as required. |
+| `default` | `any` | Sets a fallback value when the option is not provided. |
+| `description` | `string` | Adds help text for the option. |
+| `short` | `string` | Adds a short flag such as `-s`. |
+| `long` | `string` | Overrides the generated long flag name. |
+| `flags` | `string` | Sets the full Commander flag string directly. |
+| `type` | `string` | Use `"boolean"` to create a flag without a value placeholder. |
+| `choices` | `array` | Restricts the option to a set of predefined values. When the value is not provided via CLI flag, an interactive selection prompt is shown. |
+
+`body` is a top-level command property (not inside `options`) — see [JSON Request Body Templates](#json-request-body-templates) below.
 
 ## Parameter Mapping Rules
 
@@ -119,7 +124,7 @@ GET /default/V1/products/12345
 Parameters not used in the endpoint are sent as follows:
 
 - `GET` and `DELETE`: query string parameters
-- `POST`, `PUT`, and `PATCH`: JSON request body fields
+- `POST`, `PUT`, and `PATCH`: JSON request body fields (or the `body` template when defined)
 
 ## Predefine Search Filters
 
@@ -154,6 +159,94 @@ Placeholders such as `${firstLetter}` are resolved from the command options befo
 Only simple placeholder substitution is supported. JavaScript expressions inside `${...}` are not evaluated.
 
 Users can still add more `--filter` flags at runtime; those filters are appended to the predefined ones.
+
+## JSON Request Body Templates
+
+For `POST`, `PUT`, and `PATCH` requests, you can define a `body` field as a JSON template. String values inside the template may contain `${paramName}` or `{:paramName}` placeholders that are replaced with the actual option values at runtime. Nested objects and arrays are fully supported.
+
+```json
+{
+  "name": "customer create",
+  "method": "POST",
+  "endpoint": "/:store/V1/customers",
+  "supports_filters": false,
+  "body": {
+    "customer": {
+      "email": "${email}",
+      "firstname": "${firstname}",
+      "lastname": "${lastname}",
+      "websiteId": "${websiteId}"
+    },
+    "password": "${password}"
+  },
+  "options": {
+    "store":     { "type": "string", "default": "all" },
+    "email":     { "type": "string", "required": true },
+    "firstname": { "type": "string", "required": true },
+    "lastname":  { "type": "string", "required": true },
+    "websiteId": { "type": "string", "default": "1" },
+    "password":  { "type": "string", "required": true }
+  }
+}
+```
+
+When `body` is defined, only path parameters (`:store`) are substituted in the URL. All remaining option values must be referenced explicitly inside the body template. Options not referenced in the template are ignored for the body.
+
+### Type preservation
+
+A placeholder that covers the entire string value (e.g., `"${websiteId}"`) receives the original typed value from the CLI option — a number stays a number, a boolean stays a boolean. Mixed-content strings such as `"Order ${orderId} created"` always produce a string.
+
+Static JSON values (numbers, booleans, `null`) in the template pass through unchanged regardless of placeholders.
+
+## Option Choices
+
+Adding a `choices` array to an option restricts it to a set of predefined values:
+
+- When the user provides the option via `--flag value`, Commander validates that the value is in the allowed list.
+- When the option is **not provided**, an interactive selection prompt is shown automatically.
+
+### Simple string choices
+
+```json
+{
+  "name": "product set-status",
+  "method": "PUT",
+  "endpoint": "/:store/V1/products/:sku",
+  "options": {
+    "store": { "type": "string", "default": "all" },
+    "sku":    { "type": "string", "required": true },
+    "status": {
+      "type": "string",
+      "required": true,
+      "description": "Product status",
+      "choices": ["enabled", "disabled"]
+    }
+  }
+}
+```
+
+```bash
+# pass directly
+mage-remote-run product set-status --sku SHIRT-M --status enabled
+
+# omit the flag → interactive select prompt appears
+mage-remote-run product set-status --sku SHIRT-M
+```
+
+### Object choices
+
+Use objects to show a human-readable label in the prompt while sending a different underlying value in the request:
+
+```json
+"choices": [
+  { "name": "Not Visible Individually", "value": "1" },
+  { "name": "Catalog",                  "value": "2" },
+  { "name": "Search",                   "value": "3" },
+  { "name": "Catalog, Search",          "value": "4" }
+]
+```
+
+The `name` is displayed in the interactive prompt; `value` is what gets sent in the API request.
 
 ## Ship Virtual Commands from Plugins
 
