@@ -73,6 +73,99 @@
           "description": "The first letter of the product name"
         }
       }
+    },
+    {
+      "name": "example virtual get-products-by-visibility",
+      "method": "GET",
+      "endpoint": "/:storeId/V1/products",
+      "description": "List products filtered by a specific visibility scope. When --visibility is omitted, an interactive prompt lets you pick from the four Magento visibility values.",
+      "summary": "GET /V1/products filtered by visibility (choices example)",
+      "supports_filters": true,
+      "connection_types": [
+        "magento-os",
+        "mage-os",
+        "ac-on-prem",
+        "ac-cloud-paas"
+      ],
+      "filters": [
+        "visibility=${visibility}"
+      ],
+      "options": {
+        "storeId": {
+          "type": "string",
+          "required": false,
+          "description": "Store view code (e.g., all, default)",
+          "default": "all"
+        },
+        "visibility": {
+          "type": "string",
+          "required": true,
+          "description": "Product visibility scope",
+          "choices": [
+            { "name": "Not Visible Individually", "value": "1" },
+            { "name": "Catalog",                  "value": "2" },
+            { "name": "Search",                   "value": "3" },
+            { "name": "Catalog, Search",          "value": "4" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "example virtual create-customer",
+      "method": "POST",
+      "endpoint": "/:storeId/V1/customers",
+      "description": "Create a new customer account using a nested JSON body template. Demonstrates ${paramName} placeholder interpolation inside a structured payload.",
+      "summary": "POST /V1/customers with body template",
+      "supports_filters": false,
+      "connection_types": [
+        "magento-os",
+        "mage-os",
+        "ac-on-prem",
+        "ac-cloud-paas"
+      ],
+      "body": {
+        "customer": {
+          "email": "${email}",
+          "firstname": "${firstname}",
+          "lastname": "${lastname}",
+          "websiteId": "${websiteId}"
+        },
+        "password": "${password}"
+      },
+      "options": {
+        "storeId": {
+          "type": "string",
+          "required": false,
+          "description": "The store ID code (e.g., all, default)",
+          "default": "all"
+        },
+        "email": {
+          "type": "string",
+          "required": true,
+          "description": "Customer email address"
+        },
+        "firstname": {
+          "type": "string",
+          "required": true,
+          "description": "Customer first name"
+        },
+        "lastname": {
+          "type": "string",
+          "required": true,
+          "description": "Customer last name"
+        },
+        "websiteId": {
+          "type": "string",
+          "required": false,
+          "description": "Website ID the customer belongs to",
+          "default": "1"
+        },
+        "password": {
+          "type": "string",
+          "required": true,
+          "description": "Customer password"
+        }
+      }
     }
   ]
 }
