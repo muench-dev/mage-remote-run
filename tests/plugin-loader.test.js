@@ -108,11 +108,14 @@ describe('PluginLoader', () => {
         await loader.loadPlugins();
 
         expect(loader.plugins).toHaveLength(1); // The plugin module pushes metadata
-        expect(loader.appContext.config.commands).toHaveLength(3);
+        expect(loader.appContext.config.commands).toHaveLength(6);
         expect(loader.appContext.config.commands.map(command => command.name)).toEqual([
             'example virtual get-country',
             'example virtual get-countries',
-            'example virtual get-products-starting-with-letter'
+            'example virtual get-products-starting-with-letter',
+            'example virtual get-products-by-visibility',
+            'example virtual create-customer',
+            'example virtual set-product-status'
         ]);
     });
 

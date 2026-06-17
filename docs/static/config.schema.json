@@ -97,6 +97,11 @@
           },
           "parameter": {
             "$ref": "#/definitions/commandInputs"
+          },
+          "body": {
+            "type": "object",
+            "description": "JSON body template for POST/PUT/PATCH requests. String values may contain ${paramName} or {:paramName} placeholders replaced with typed option values at runtime. Nested objects and arrays are supported.",
+            "additionalProperties": true
           }
         },
         "required": ["name", "method", "endpoint"]
@@ -142,6 +147,31 @@
             "type": "boolean",
             "description": "Whether the argument takes multiple values.",
             "default": false
+          },
+          "choices": {
+            "type": "array",
+            "description": "Restricts the option to a set of predefined values. When the value is not provided via CLI flag, an interactive selection prompt is shown. Each item may be a plain string or an object with 'name' (display label) and 'value' (actual value) fields.",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Display label shown in the interactive selection prompt."
+                    },
+                    "value": {
+                      "type": "string",
+                      "description": "Actual value sent in the request."
+                    }
+                  },
+                  "required": ["name", "value"]
+                }
+              ]
+            }
           }
         }
       }

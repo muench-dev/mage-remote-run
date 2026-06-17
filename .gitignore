@@ -2,8 +2,9 @@
 node_modules
 .DS_Store
 coverage
-.localstorage
+.localstorage*
 .env
+.claude/settings.local.json
 .npm
 build/
 dist/
