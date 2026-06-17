@@ -435,4 +435,145 @@ describe('Virtual Commands', () => {
             );
         });
     });
+
+    describe('choices support', () => {
+        let savedIsTTY;
+        beforeEach(() => {
+            savedIsTTY = process.stdin.isTTY;
+            process.stdin.isTTY = true;
+            select.mockReset();
+        });
+        afterEach(() => {
+            process.stdin.isTTY = savedIsTTY;
+        });
+
+        it('should use the provided value without prompting when choices are defined', async () => {
+            config.commands[0].parameter.status = {
+                type: 'string', required: true, description: 'Product status',
+                choices: ['enabled', 'disabled']
+            };
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123', status: 'enabled' });
+
+            expect(select).not.toHaveBeenCalled();
+            expect(mockClient.request).toHaveBeenCalledWith(
+                'GET', '/V1/test/123', undefined, { status: 'enabled' },
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        });
+
+        it('should prompt with select when value is not provided', async () => {
+            config.commands[0].parameter.status = {
+                type: 'string', required: true, description: 'Product status',
+                choices: ['enabled', 'disabled']
+            };
+
+            select.mockResolvedValue('disabled');
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(select).toHaveBeenCalledWith({
+                message: 'Product status',
+                choices: [{ name: 'enabled', value: 'enabled' }, { name: 'disabled', value: 'disabled' }],
+                default: undefined
+            });
+            expect(mockClient.request).toHaveBeenCalledWith(
+                'GET', '/V1/test/123', undefined, { status: 'disabled' },
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        });
+
+        it('should support object choices with name and value', async () => {
+            config.commands[0].parameter.visibility = {
+                type: 'string', required: true, description: 'Visibility',
+                choices: [
+                    { name: 'Not Visible Individually', value: '1' },
+                    { name: 'Catalog', value: '2' },
+                    { name: 'Search', value: '3' },
+                    { name: 'Catalog, Search', value: '4' }
+                ]
+            };
+
+            select.mockResolvedValue('4');
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(select).toHaveBeenCalledWith({
+                message: 'Visibility',
+                choices: [
+                    { name: 'Not Visible Individually', value: '1' },
+                    { name: 'Catalog', value: '2' },
+                    { name: 'Search', value: '3' },
+                    { name: 'Catalog, Search', value: '4' }
+                ],
+                default: undefined
+            });
+        });
+
+        it('should include default in the select call when defined', async () => {
+            config.commands[0].parameter.status = {
+                type: 'string', required: false, description: 'Product status',
+                default: 'enabled', choices: ['enabled', 'disabled']
+            };
+
+            select.mockResolvedValue('enabled');
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(select).toHaveBeenCalledWith({
+                message: 'Product status',
+                choices: [{ name: 'enabled', value: 'enabled' }, { name: 'disabled', value: 'disabled' }],
+                default: 'enabled'
+            });
+        });
+
+        it('should not call select for options without choices', async () => {
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(select).not.toHaveBeenCalled();
+        });
+
+        it('should work with choices and body template together', async () => {
+            config.commands[0].method = 'POST';
+            config.commands[0].body = { status: '${status}' };
+            config.commands[0].parameter.status = {
+                type: 'string', required: true, description: 'Product status',
+                choices: ['enabled', 'disabled']
+            };
+
+            select.mockResolvedValue('enabled');
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(select).toHaveBeenCalled();
+            expect(mockClient.request).toHaveBeenCalledWith(
+                'POST', '/V1/test/123', { status: 'enabled' }, undefined,
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        });
+    });
 });
