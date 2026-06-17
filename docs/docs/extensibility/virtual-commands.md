@@ -248,6 +248,30 @@ Use objects to show a human-readable label in the prompt while sending a differe
 
 The `name` is displayed in the interactive prompt; `value` is what gets sent in the API request.
 
+## Non-Interactive Mode
+
+When a required option or a `choices` option is not provided via a CLI flag, the CLI normally shows an interactive prompt. This behaviour is suppressed automatically in non-interactive environments.
+
+The CLI enters non-interactive mode when **any** of the following conditions is true:
+
+| Condition | Details |
+|---|---|
+| `CI=<any>` | Standard CI environment variable — set by GitHub Actions, GitLab CI, CircleCI, and most other CI systems. |
+| `NO_INTERACTIVE=1` | Explicit opt-out. |
+| `NON_INTERACTIVE=1` | Alias for `NO_INTERACTIVE=1`. |
+| `NONINTERACTIVE=1` | Alias for `NO_INTERACTIVE=1`. |
+| stdin is not a TTY | Stdin is piped or redirected (e.g. `echo "" \| mage-remote-run …`). |
+
+In non-interactive mode, missing **required** options cause the command to exit with an error. Missing optional options without a `default` are silently skipped.
+
+```bash
+# Force non-interactive execution
+NON_INTERACTIVE=1 mage-remote-run product get --sku SHIRT-M
+
+# Equivalent CI-style invocation
+NO_INTERACTIVE=1 mage-remote-run product get --sku SHIRT-M
+```
+
 ## Ship Virtual Commands from Plugins
 
 Plugins can distribute virtual commands in two ways:
