@@ -116,7 +116,7 @@ describe('Virtual Commands', () => {
         expect(getCmd._name).toBe('get');
         expect(getCmd.description).toHaveBeenCalledWith('Test virtual command');
         expect(getCmd.summary).toHaveBeenCalledWith('Test summary');
-        expect(getCmd.requiredOption).toHaveBeenCalledWith('--id <value>', 'Test ID');
+        expect(getCmd.option).toHaveBeenCalledWith('--id <value>', 'Test ID');
         expect(getCmd.option).toHaveBeenCalledWith('--optional <value>', 'Parameter optional', 'yes');
         expect(getCmd.action).toHaveBeenCalled();
     });
@@ -141,7 +141,7 @@ describe('Virtual Commands', () => {
         const virtualCmd = exampleCmd.commands[0];
         const getCmd = virtualCmd.commands[0];
 
-        expect(getCmd.requiredOption).toHaveBeenCalledWith('--countryId <value>', 'Country ID');
+        expect(getCmd.option).toHaveBeenCalledWith('--countryId <value>', 'Country ID');
         expect(getCmd.option).toHaveBeenCalledWith('--verbose', 'Verbose output');
         expect(getCmd.option).toHaveBeenCalledWith('-S, --store-code <value>', 'Option store', 'all');
     });
@@ -293,7 +293,8 @@ describe('Virtual Commands', () => {
             await mockAction({ id: '123', email: 'foo@bar.com' });
 
             expect(mockClient.request).toHaveBeenCalledWith(
-                'POST', '/V1/test/123',
+                'POST',
+                '/V1/test/123',
                 { customer: { email: 'foo@bar.com' } },
                 undefined,
                 { headers: { 'Content-Type': 'application/json' } }
@@ -312,7 +313,8 @@ describe('Virtual Commands', () => {
             await mockAction({ id: '123', val: 'deep' });
 
             expect(mockClient.request).toHaveBeenCalledWith(
-                'POST', '/V1/test/123',
+                'POST',
+                '/V1/test/123',
                 { level1: { level2: { field: 'deep' } } },
                 undefined,
                 { headers: { 'Content-Type': 'application/json' } }
@@ -331,7 +333,10 @@ describe('Virtual Commands', () => {
             await mockAction({ id: '123', websiteId: 1 });
 
             expect(mockClient.request).toHaveBeenCalledWith(
-                'POST', '/V1/test/123', { websiteId: 1 }, undefined,
+                'POST',
+                '/V1/test/123',
+                { websiteId: 1 },
+                undefined,
                 { headers: { 'Content-Type': 'application/json' } }
             );
         });
@@ -348,7 +353,10 @@ describe('Virtual Commands', () => {
             await mockAction({ id: '123', active: true });
 
             expect(mockClient.request).toHaveBeenCalledWith(
-                'POST', '/V1/test/123', { active: true }, undefined,
+                'POST',
+                '/V1/test/123',
+                { active: true },
+                undefined,
                 { headers: { 'Content-Type': 'application/json' } }
             );
         });
@@ -365,7 +373,10 @@ describe('Virtual Commands', () => {
             await mockAction({ id: '123', name: 'Alice' });
 
             expect(mockClient.request).toHaveBeenCalledWith(
-                'POST', '/V1/test/123', { label: 'User Alice' }, undefined,
+                'POST',
+                '/V1/test/123',
+                { label: 'User Alice' },
+                undefined,
                 { headers: { 'Content-Type': 'application/json' } }
             );
         });
@@ -381,7 +392,10 @@ describe('Virtual Commands', () => {
             await mockAction({ id: '123' });
 
             expect(mockClient.request).toHaveBeenCalledWith(
-                'POST', '/V1/test/123', { version: 2, enabled: true }, undefined,
+                'POST',
+                '/V1/test/123',
+                { version: 2, enabled: true },
+                undefined,
                 { headers: { 'Content-Type': 'application/json' } }
             );
         });
@@ -398,7 +412,10 @@ describe('Virtual Commands', () => {
             await mockAction({ id: '42', email: 'a@b.com' });
 
             expect(mockClient.request).toHaveBeenCalledWith(
-                'POST', '/V1/test/42', { email: 'a@b.com' }, undefined,
+                'POST',
+                '/V1/test/42',
+                { email: 'a@b.com' },
+                undefined,
                 { headers: { 'Content-Type': 'application/json' } }
             );
         });
@@ -415,7 +432,10 @@ describe('Virtual Commands', () => {
             await mockAction({ id: '123', firstName: 'Bob' });
 
             expect(mockClient.request).toHaveBeenCalledWith(
-                'POST', '/V1/test/123', { name: 'Bob' }, undefined,
+                'POST',
+                '/V1/test/123',
+                { name: 'Bob' },
+                undefined,
                 { headers: { 'Content-Type': 'application/json' } }
             );
         });
@@ -430,7 +450,10 @@ describe('Virtual Commands', () => {
             await mockAction({ id: '999', optional: 'sure' });
 
             expect(mockClient.request).toHaveBeenCalledWith(
-                'POST', '/V1/test/999', { optional: 'sure' }, undefined,
+                'POST',
+                '/V1/test/999',
+                { optional: 'sure' },
+                undefined,
                 { headers: { 'Content-Type': 'application/json' } }
             );
         });
@@ -449,7 +472,9 @@ describe('Virtual Commands', () => {
 
         it('should use the provided value without prompting when choices are defined', async () => {
             config.commands[0].parameter.status = {
-                type: 'string', required: true, description: 'Product status',
+                type: 'string',
+                required: true,
+                description: 'Product status',
                 choices: ['enabled', 'disabled']
             };
 
@@ -461,14 +486,19 @@ describe('Virtual Commands', () => {
 
             expect(select).not.toHaveBeenCalled();
             expect(mockClient.request).toHaveBeenCalledWith(
-                'GET', '/V1/test/123', undefined, { status: 'enabled' },
+                'GET',
+                '/V1/test/123',
+                undefined,
+                { status: 'enabled' },
                 { headers: { 'Content-Type': 'application/json' } }
             );
         });
 
         it('should prompt with select when value is not provided', async () => {
             config.commands[0].parameter.status = {
-                type: 'string', required: true, description: 'Product status',
+                type: 'string',
+                required: true,
+                description: 'Product status',
                 choices: ['enabled', 'disabled']
             };
 
@@ -486,14 +516,19 @@ describe('Virtual Commands', () => {
                 default: undefined
             });
             expect(mockClient.request).toHaveBeenCalledWith(
-                'GET', '/V1/test/123', undefined, { status: 'disabled' },
+                'GET',
+                '/V1/test/123',
+                undefined,
+                { status: 'disabled' },
                 { headers: { 'Content-Type': 'application/json' } }
             );
         });
 
         it('should support object choices with name and value', async () => {
             config.commands[0].parameter.visibility = {
-                type: 'string', required: true, description: 'Visibility',
+                type: 'string',
+                required: true,
+                description: 'Visibility',
                 choices: [
                     { name: 'Not Visible Individually', value: '1' },
                     { name: 'Catalog', value: '2' },
@@ -520,12 +555,22 @@ describe('Virtual Commands', () => {
                 ],
                 default: undefined
             });
+            expect(mockClient.request).toHaveBeenCalledWith(
+                'GET',
+                '/V1/test/123',
+                undefined,
+                { visibility: '4' },
+                { headers: { 'Content-Type': 'application/json' } }
+            );
         });
 
         it('should include default in the select call when defined', async () => {
             config.commands[0].parameter.status = {
-                type: 'string', required: false, description: 'Product status',
-                default: 'enabled', choices: ['enabled', 'disabled']
+                type: 'string',
+                required: false,
+                description: 'Product status',
+                default: 'enabled',
+                choices: ['enabled', 'disabled']
             };
 
             select.mockResolvedValue('enabled');
@@ -534,7 +579,7 @@ describe('Virtual Commands', () => {
             createClient.mockResolvedValue(mockClient);
 
             registerVirtualCommands(program, config, profile);
-            await mockAction({ id: '123' });
+            await mockAction({ id: '123' }); // no status provided — Commander default not applied in mock
 
             expect(select).toHaveBeenCalledWith({
                 message: 'Product status',
@@ -557,7 +602,9 @@ describe('Virtual Commands', () => {
             config.commands[0].method = 'POST';
             config.commands[0].body = { status: '${status}' };
             config.commands[0].parameter.status = {
-                type: 'string', required: true, description: 'Product status',
+                type: 'string',
+                required: true,
+                description: 'Product status',
                 choices: ['enabled', 'disabled']
             };
 
@@ -571,9 +618,283 @@ describe('Virtual Commands', () => {
 
             expect(select).toHaveBeenCalled();
             expect(mockClient.request).toHaveBeenCalledWith(
-                'POST', '/V1/test/123', { status: 'enabled' }, undefined,
+                'POST',
+                '/V1/test/123',
+                { status: 'enabled' },
+                undefined,
                 { headers: { 'Content-Type': 'application/json' } }
             );
+        });
+    });
+
+    describe('interactive input prompts', () => {
+        let savedIsTTY;
+        beforeEach(() => {
+            savedIsTTY = process.stdin.isTTY;
+            process.stdin.isTTY = true;
+            input.mockReset();
+            password.mockReset();
+        });
+        afterEach(() => {
+            process.stdin.isTTY = savedIsTTY;
+        });
+
+        it('should prompt with input() for a missing required string option', async () => {
+            config.commands[0].parameter.name = {
+                type: 'string',
+                required: true,
+                description: 'Customer name'
+            };
+
+            input.mockResolvedValue('Alice');
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(input).toHaveBeenCalledWith({
+                message: 'Customer name:',
+                validate: expect.any(Function)
+            });
+            expect(mockClient.request).toHaveBeenCalledWith(
+                'GET',
+                '/V1/test/123',
+                undefined,
+                { name: 'Alice' },
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        });
+
+        it('should prompt with password() for sensitive field names', async () => {
+            for (const sensitiveKey of ['password', 'secret', 'token', 'apiKey']) {
+                input.mockReset();
+                password.mockReset();
+
+                const cmd = { ...config.commands[0], parameter: { ...config.commands[0].parameter } };
+                cmd.parameter[sensitiveKey] = { type: 'string', required: true, description: `${sensitiveKey} value` };
+                config.commands[0] = cmd;
+
+                password.mockResolvedValue('s3cr3t');
+
+                const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+                createClient.mockResolvedValue(mockClient);
+
+                registerVirtualCommands(program, config, profile);
+                await mockAction({ id: '123' });
+
+                expect(password).toHaveBeenCalled();
+                expect(input).not.toHaveBeenCalled();
+            }
+        });
+
+        it('should use the option key as fallback message when description is absent', async () => {
+            config.commands[0].parameter.email = {
+                type: 'string',
+                required: true
+            };
+
+            input.mockResolvedValue('test@example.com');
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(input).toHaveBeenCalledWith(expect.objectContaining({
+                message: 'Enter email:'
+            }));
+        });
+
+        it('should not prompt for optional options without choices', async () => {
+            config.commands[0].parameter.optional = {
+                type: 'string',
+                required: false,
+                description: 'Optional field'
+            };
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(input).not.toHaveBeenCalled();
+            expect(password).not.toHaveBeenCalled();
+        });
+
+        it('should not prompt for boolean type options', async () => {
+            config.commands[0].parameter.flag = {
+                type: 'boolean',
+                required: true,
+                description: 'A required flag'
+            };
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(input).not.toHaveBeenCalled();
+            expect(password).not.toHaveBeenCalled();
+        });
+
+        it('should not prompt when value is already provided', async () => {
+            config.commands[0].parameter.name = {
+                type: 'string',
+                required: true,
+                description: 'Customer name'
+            };
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123', name: 'Bob' });
+
+            expect(input).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('non-interactive mode', () => {
+        let savedIsTTY;
+        let savedCI;
+        beforeEach(() => {
+            savedIsTTY = process.stdin.isTTY;
+            savedCI    = process.env.CI;
+            process.stdin.isTTY = false;
+            delete process.env.CI;
+            handleError.mockReset();
+            input.mockReset();
+            password.mockReset();
+            select.mockReset();
+        });
+        afterEach(() => {
+            process.stdin.isTTY = savedIsTTY;
+            if (savedCI !== undefined) process.env.CI = savedCI;
+            else delete process.env.CI;
+        });
+
+        it('should call handleError for a missing required option without prompting', async () => {
+            config.commands[0].parameter.sku = {
+                type: 'string',
+                required: true,
+                description: 'Product SKU'
+            };
+
+            const mockClient = { request: jest.fn() };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(handleError).toHaveBeenCalledWith(expect.objectContaining({
+                message: 'Missing required option: --sku'
+            }));
+            expect(input).not.toHaveBeenCalled();
+            expect(mockClient.request).not.toHaveBeenCalled();
+        });
+
+        it('should list all missing required options in the error', async () => {
+            config.commands[0].parameter.sku   = { type: 'string', required: true };
+            config.commands[0].parameter.email = { type: 'string', required: true };
+
+            const mockClient = { request: jest.fn() };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(handleError).toHaveBeenCalledWith(expect.objectContaining({
+                message: 'Missing required options: --sku, --email'
+            }));
+        });
+
+        it('should not error for optional options', async () => {
+            config.commands[0].parameter.optional = {
+                type: 'string',
+                required: false,
+                description: 'Optional'
+            };
+
+            const mockClient = { request: jest.fn().mockResolvedValue({ data: {} }) };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(handleError).not.toHaveBeenCalled();
+        });
+
+        it('should not prompt for choices options — error instead if required', async () => {
+            config.commands[0].parameter.status = {
+                type: 'string',
+                required: true,
+                description: 'Status',
+                choices: ['enabled', 'disabled']
+            };
+
+            const mockClient = { request: jest.fn() };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(handleError).toHaveBeenCalledWith(expect.objectContaining({
+                message: 'Missing required option: --status'
+            }));
+            expect(select).not.toHaveBeenCalled();
+        });
+
+        it('should treat CI env var as non-interactive even on a TTY', async () => {
+            process.stdin.isTTY = true;
+            process.env.CI = 'true';
+
+            config.commands[0].parameter.sku = {
+                type: 'string',
+                required: true,
+                description: 'Product SKU'
+            };
+
+            const mockClient = { request: jest.fn() };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+            await mockAction({ id: '123' });
+
+            expect(handleError).toHaveBeenCalledWith(expect.objectContaining({
+                message: 'Missing required option: --sku'
+            }));
+            expect(input).not.toHaveBeenCalled();
+        });
+
+        it('should treat NO_INTERACTIVE=1 as non-interactive even on a TTY', async () => {
+            process.stdin.isTTY = true;
+            process.env.NO_INTERACTIVE = '1';
+
+            config.commands[0].parameter.sku = {
+                type: 'string',
+                required: true,
+                description: 'Product SKU'
+            };
+
+            const mockClient = { request: jest.fn() };
+            createClient.mockResolvedValue(mockClient);
+
+            registerVirtualCommands(program, config, profile);
+
+            try {
+                await mockAction({ id: '123' });
+                expect(handleError).toHaveBeenCalledWith(expect.objectContaining({
+                    message: 'Missing required option: --sku'
+                }));
+                expect(input).not.toHaveBeenCalled();
+            } finally {
+                delete process.env.NO_INTERACTIVE;
+            }
         });
     });
 });
