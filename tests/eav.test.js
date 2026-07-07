@@ -59,6 +59,14 @@ describe('EAV Commands', () => {
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
     });
 
+    it('attribute-set list: should handle errors', async () => {
+        mockClient.get.mockRejectedValue(new Error('API failure'));
+
+        await program.parseAsync(['node', 'test', 'eav', 'attribute-set', 'list']);
+
+        expect(console.error).toHaveBeenCalledWith(expect.anything(), 'API failure');
+    });
+
     it('attribute-set show: should show details', async () => {
         mockClient.get.mockResolvedValue({
             attribute_set_id: 1, attribute_set_name: 'Default'
@@ -67,5 +75,13 @@ describe('EAV Commands', () => {
         await program.parseAsync(['node', 'test', 'eav', 'attribute-set', 'show', '1']);
 
         expect(mockClient.get).toHaveBeenCalledWith('V1/eav/attribute-sets/1', {}, expect.anything());
+    });
+
+    it('attribute-set show: should handle errors', async () => {
+        mockClient.get.mockRejectedValue(new Error('API failure'));
+
+        await program.parseAsync(['node', 'test', 'eav', 'attribute-set', 'show', '1']);
+
+        expect(console.error).toHaveBeenCalledWith(expect.anything(), 'API failure');
     });
 });
