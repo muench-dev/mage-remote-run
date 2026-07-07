@@ -197,7 +197,7 @@ describe('Product Commands', () => {
 
         await program.parseAsync(['node', 'test', 'product', 'list']);
 
-        expect(jest.spyOn(console, 'error')).toBeDefined();
+        expect(console.error).toHaveBeenCalled();
     });
 
     it('show: should output json format', async () => {
@@ -281,7 +281,7 @@ describe('Product Commands', () => {
 
         await program.parseAsync(['node', 'test', 'product', 'show', 'NOTEXIST']);
 
-        expect(jest.spyOn(console, 'error')).toBeDefined();
+        expect(console.error).toHaveBeenCalled();
     });
 
     it('media list: should show "no media" message when empty', async () => {
@@ -348,7 +348,7 @@ describe('Product Commands', () => {
 
         await program.parseAsync(['node', 'test', 'product', 'attribute', 'show', 'nonexistent']);
 
-        expect(jest.spyOn(console, 'error')).toBeDefined();
+        expect(console.error).toHaveBeenCalled();
     });
 
     it('attribute show: should display attribute without options', async () => {
@@ -386,5 +386,44 @@ describe('Product Commands', () => {
 
         expect(mockClient.get).toHaveBeenCalledWith('V1/products/attributes/types');
         expect(consoleLogSpy).toHaveBeenCalledWith('MOCK_TABLE');
+    });
+
+    it('media list: should handle errors', async () => {
+        mockClient.get.mockRejectedValue(new Error('Network Error'));
+        await program.parseAsync(['node', 'test', 'product', 'media', 'list', 'TS123']);
+        expect(console.error).toHaveBeenCalled();
+    });
+
+    it('type list: should handle errors', async () => {
+        mockClient.get.mockRejectedValue(new Error('Network Error'));
+        await program.parseAsync(['node', 'test', 'product', 'type', 'list']);
+        expect(console.error).toHaveBeenCalled();
+    });
+
+    it('attribute list: should handle errors', async () => {
+        mockClient.get.mockRejectedValue(new Error('Network Error'));
+        await program.parseAsync(['node', 'test', 'product', 'attribute', 'list']);
+        expect(console.error).toHaveBeenCalled();
+    });
+
+    it('attribute type list: should handle errors', async () => {
+        mockClient.get.mockRejectedValue(new Error('Network Error'));
+        await program.parseAsync(['node', 'test', 'product', 'attribute', 'type', 'list']);
+        expect(console.error).toHaveBeenCalled();
+    });
+
+    it('link-type list: should output json format via formatOutput', async () => {
+        mockClient.get.mockResolvedValue([
+            { code: 1, name: 'related' }
+        ]);
+        await program.parseAsync(['node', 'test', 'product', 'link-type', 'list', '--format', 'json']);
+        expect(mockClient.get).toHaveBeenCalled();
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('"name"'));
+    });
+
+    it('link-type list: should handle errors', async () => {
+        mockClient.get.mockRejectedValue(new Error('Network Error'));
+        await program.parseAsync(['node', 'test', 'product', 'link-type', 'list']);
+        expect(console.error).toHaveBeenCalled();
     });
 });
